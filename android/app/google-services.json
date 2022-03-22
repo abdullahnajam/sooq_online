@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "81841265624",
+    "project_id": "propertymarket-d425c",
+    "storage_bucket": "propertymarket-d425c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:81841265624:android:4fdb1292b61feaec27b0ad",
+        "android_client_info": {
+          "package_name": "com.realestate.propertymarket"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "81841265624-epttt54db3biqq4iostdc69cshv73rdf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaSBspKai6BCSWeqaVZDaLTdK9fQCnrPE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "81841265624-epttt54db3biqq4iostdc69cshv73rdf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
