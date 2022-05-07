@@ -189,9 +189,7 @@ class _BestState extends State<Best> {
             DATA[individualKey]['agentName'],
             DATA[individualKey]['serial'],
             DATA[individualKey]['description_ar'],
-            DATA[individualKey]['name_ar'],
             DATA[individualKey]['agentName_ar'],
-            DATA[individualKey]['payment_ar'],
             DATA[individualKey]['city_ar'],
             DATA[individualKey]['country_ar'],
             DATA[individualKey]['area_ar'],
@@ -339,7 +337,7 @@ class _BestState extends State<Best> {
                                           children: [
                                             Icon(Icons.search,color: Colors.grey[600],),
                                             SizedBox(width: 10,),
-                                            Text('searchProperty'.tr(),style: TextStyle(color: Colors.grey[600],fontSize: 18),)
+                                            Text('search'.tr(),style: TextStyle(color: Colors.grey[600],fontSize: 18),)
                                           ],
                                         ),
                                       ),
@@ -369,7 +367,7 @@ class _BestState extends State<Best> {
                                 separatorBuilder: (context, position) {
                                   return Container(
                                       margin: EdgeInsets.only(bottom: 10),
-                                      child: (position != 0 && position % 4 == 0) ?
+                                      child: (position != 0 && position % 2 == 0) ?
                                       AdmobBanner(
                                         adUnitId: Platform.isAndroid ? androidAdmobBanner : iosAdmobBanner,
                                         adSize: bannerSize,

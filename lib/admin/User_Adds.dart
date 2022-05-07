@@ -110,9 +110,7 @@ class _UserAddsState extends State<UserAdds> {
             DATA[individualKey]['agentName'],
             DATA[individualKey]['serial'],
             DATA[individualKey]['description_ar'],
-            DATA[individualKey]['name_ar'],
             DATA[individualKey]['agentName_ar'],
-            DATA[individualKey]['payment_ar'],
             DATA[individualKey]['city_ar'],
             DATA[individualKey]['country_ar'],
             DATA[individualKey]['area_ar'],
@@ -166,9 +164,7 @@ class _UserAddsState extends State<UserAdds> {
             DATA[individualKey]['agentName'],
             DATA[individualKey]['serial'],
             DATA[individualKey]['description_ar'],
-            DATA[individualKey]['name_ar'],
             DATA[individualKey]['agentName_ar'],
-            DATA[individualKey]['payment_ar'],
             DATA[individualKey]['city_ar'],
             DATA[individualKey]['country_ar'],
             DATA[individualKey]['area_ar'],
@@ -222,9 +218,7 @@ class _UserAddsState extends State<UserAdds> {
             DATA[individualKey]['agentName'],
             DATA[individualKey]['serial'],
             DATA[individualKey]['description_ar'],
-            DATA[individualKey]['name_ar'],
             DATA[individualKey]['agentName_ar'],
-            DATA[individualKey]['payment_ar'],
             DATA[individualKey]['city_ar'],
             DATA[individualKey]['country_ar'],
             DATA[individualKey]['area_ar'],
@@ -265,7 +259,7 @@ class _UserAddsState extends State<UserAdds> {
               backgroundColor: primaryColor,
               title: Text("User Adds"),
             ),
-            backgroundColor: Color(0xfff2f8fc),
+            backgroundColor: Color(0xffF5F5F5),
             body: Container(
               child: Column(
                 children: [
@@ -347,7 +341,7 @@ class _UserAddsState extends State<UserAdds> {
                                                                 children: [
                                                                   Text(timeAgoSinceDate(snapshot.data[index].datePosted),style: TextStyle(fontSize: 10,fontWeight: FontWeight.w300),),
                                                                   SizedBox(height: 10,),
-                                                                  Text(context.locale.languageCode=="en"?snapshot.data[index].name:snapshot.data[index].name_ar,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 18,color: Colors.black),),
+                                                                  Text(snapshot.data[index].name,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 18,color: Colors.black),),
                                                                   SizedBox(height: 5,),
                                                                   Text(context.locale.languageCode=="en"?snapshot.data[index].location:"${snapshot.data[index].area_ar}, ${snapshot.data[index].city_ar}, ${snapshot.data[index].country_ar}",style: TextStyle(fontWeight: FontWeight.w600,fontSize: 15,color: Colors.black),),
                                                                   SizedBox(height: 5,),
@@ -431,7 +425,7 @@ class _UserAddsState extends State<UserAdds> {
                                                                 children: [
                                                                   Text(timeAgoSinceDate(snapshot.data[index].datePosted),style: TextStyle(fontSize: 10,fontWeight: FontWeight.w300),),
                                                                   SizedBox(height: 10,),
-                                                                  Text(context.locale.languageCode=="en"?snapshot.data[index].name:snapshot.data[index].name_ar,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 18,color: Colors.black),),
+                                                                  Text(snapshot.data[index].name,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 18,color: Colors.black),),
                                                                   SizedBox(height: 5,),
                                                                   Text(context.locale.languageCode=="en"?snapshot.data[index].location:"${snapshot.data[index].area_ar}, ${snapshot.data[index].city_ar}, ${snapshot.data[index].country_ar}",style: TextStyle(fontWeight: FontWeight.w600,fontSize: 15,color: Colors.black),),
                                                                    SizedBox(height: 5,),
@@ -514,7 +508,7 @@ class _UserAddsState extends State<UserAdds> {
                                                                 children: [
                                                                   Text(timeAgoSinceDate(snapshot.data[index].datePosted),style: TextStyle(fontSize: 10,fontWeight: FontWeight.w300),),
                                                                   SizedBox(height: 10,),
-                                                                  Text(context.locale.languageCode=="en"?snapshot.data[index].name:snapshot.data[index].name_ar,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 18,color: Colors.black),),
+                                                                  Text(snapshot.data[index].name,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 18,color: Colors.black),),
                                                                   SizedBox(height: 5,),
                                                                   Text(context.locale.languageCode=="en"?snapshot.data[index].location:"${snapshot.data[index].area_ar}, ${snapshot.data[index].city_ar}, ${snapshot.data[index].country_ar}",style: TextStyle(fontWeight: FontWeight.w600,fontSize: 15,color: Colors.black),),
                                                                   SizedBox(height: 5,),

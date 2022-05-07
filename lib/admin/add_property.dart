@@ -772,7 +772,7 @@ class _AddPropertyState extends State<AddProperty> {
   submitData(){
     final databaseReference = FirebaseDatabase.instance.reference();
     print("url item ${imageURLs.length}");
-    databaseReference.child("property").push().set({
+    databaseReference.child("item").push().set({
       'addPublisherId' : addPublisherId,
       'status' : status,
       'name': wordPriceController.text,
@@ -855,9 +855,9 @@ class _AddPropertyState extends State<AddProperty> {
       body: jsonEncode(
         <String, dynamic>{
           'notification': <String, dynamic>{
-            'body': 'New Property Added',
+            'body': 'New Item Added',
             "sound" : "default",
-            'title': 'New property added in ${areaController.text}, ${cityController.text}, ${countryController.text} at ${enpriceController.text}'
+            'title': 'New item added in ${areaController.text}, ${cityController.text}, ${countryController.text} at ${enpriceController.text}'
           },
           'priority': 'high',
           'data': <String, dynamic>{

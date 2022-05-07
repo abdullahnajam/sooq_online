@@ -29,7 +29,7 @@ class _EditPropertyState extends State<EditProperty> {
 
   String status;
   final enpriceController=TextEditingController();
-  final arpriceController=TextEditingController();
+
   final numpriceController=TextEditingController();
   final wordPriceController=TextEditingController();
 
@@ -49,11 +49,7 @@ class _EditPropertyState extends State<EditProperty> {
   //arabic text field
 
 
-  final arwordPriceController=TextEditingController();
-  final ardescriptionController=TextEditingController();
-  final arpaymentController=TextEditingController();
 
-  final aragentNameController=TextEditingController();
 
   String selectedCountryId="";
   String selectedCityId="";
@@ -417,15 +413,12 @@ class _EditPropertyState extends State<EditProperty> {
   void initState() {
     wordPriceController.text=widget.property.name;
     numpriceController.text=widget.property.numericalPrice.toString();
-    arwordPriceController.text=widget.property.name_ar;
     enpriceController.text=widget.property.price_en;
-    arpriceController.text=widget.property.price_ar;
     phoneController.text=widget.property.whatsapp;
     cityController.text=widget.property.city;
     countryController.text=widget.property.country;
     areaController.text=widget.property.area;
     descriptionController.text=widget.property.description;
-    ardescriptionController.text=widget.property.description_ar;
     emailController.text=widget.property.email;
 
     setState(() {
@@ -438,9 +431,7 @@ class _EditPropertyState extends State<EditProperty> {
       }
     });
     paymentController.text=widget.property.payment;
-    arpaymentController.text=widget.property.payment_ar;
     agentNameController.text=widget.property.agentName;
-    aragentNameController.text=widget.property.agentName_ar;
     snoController.text=widget.property.serial;
 
 
@@ -456,7 +447,7 @@ class _EditPropertyState extends State<EditProperty> {
       'addPublisherId' : widget.property.addPublisherId,
       'status' : status,
       'name': wordPriceController.text,
-      'price_ar': arpriceController.text,
+      'price_ar': "",
       'price_en': enpriceController.text,
       'numericalPrice': int.parse(numpriceController.text),
       'call': phoneController.text,
@@ -474,14 +465,16 @@ class _EditPropertyState extends State<EditProperty> {
       'agentName': agentNameController.text,
       'sponsered': isSponsered,
       'serial': snoController.text,
-      'description_ar': ardescriptionController.text,
-      'name_ar': arwordPriceController.text,
-      'agentName_ar': aragentNameController.text,
-      'payment_ar': arpaymentController.text,
+      'description_ar': "",
+      'agentName_ar': "",
       'city_ar': selectedCityAR,
       'country_ar': selectedCountryAR,
       'area_ar': selectedAreaAR,
       'best': best,
+      'category': widget.property.category,
+      'subcategory': widget.property.subcategory,
+      'categoryAr': widget.property.categoryAr,
+      'subcategoryAr': widget.property.subcategoryAr,
 
     }).then((value) {
       Toast.show("Updated", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
@@ -691,20 +684,6 @@ class _EditPropertyState extends State<EditProperty> {
                                   return null;
                                 },
                                 maxLines: 1,
-                                controller: arwordPriceController,
-                                decoration: InputDecoration(hintText:"Enter Name (arabic)",contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
-                              ),
-                            ),
-                            Divider(color: Colors.grey[600],),
-                            Container(
-                              child: TextFormField(
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter some text';
-                                  }
-                                  return null;
-                                },
-                                maxLines: 1,
                                 controller: wordPriceController,
                                 decoration: InputDecoration(hintText:"Enter Name",contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
                               ),
@@ -738,21 +717,7 @@ class _EditPropertyState extends State<EditProperty> {
                                 decoration: InputDecoration(hintText:"Price (English)",contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
                               ),
                             ),
-                            Divider(color: Colors.grey[600],),
-                            Container(
-                              child: TextFormField(
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter some text';
-                                  }
-                                  return null;
-                                },
-                                controller:arpriceController,
-                                keyboardType: TextInputType.number,
-                                maxLines: 1,
-                                decoration: InputDecoration(hintText:"Price (Arabic)",contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
-                              ),
-                            ),
+
                             Divider(color: Colors.grey[600],),
                             Container(
                               child: TextFormField(
@@ -818,20 +783,7 @@ class _EditPropertyState extends State<EditProperty> {
                                 decoration: InputDecoration(hintText:"Property Description",contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
                               ),
                             ),
-                            Divider(color: Colors.grey[600],),
-                            Container(
-                              child: TextFormField(
-                                maxLines: 3,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter some text';
-                                  }
-                                  return null;
-                                },
-                                controller: ardescriptionController,
-                                decoration: InputDecoration(hintText:"Property Description (arabic)",contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
-                              ),
-                            ),
+
 
                           ],
                         )
@@ -905,21 +857,7 @@ class _EditPropertyState extends State<EditProperty> {
                                 decoration: InputDecoration(hintText:"Enter Agent Name",contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
                               ),
                             ),
-                            Divider(color: Colors.grey[600],),
-                            Container(
-                              child: TextFormField(
-                                maxLines: 1,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter some text';
-                                  }
-                                  return null;
-                                },
-                                controller: aragentNameController,
 
-                                decoration: InputDecoration(hintText:"Enter Agent Name (arabic)",contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
-                              ),
-                            ),
 
                           ],
                         )
@@ -1024,21 +962,7 @@ class _EditPropertyState extends State<EditProperty> {
                                 decoration: InputDecoration(hintText:"Enter Payment Type",contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
                               ),
                             ),
-                            Divider(color: Colors.grey[600],),
-                            Container(
-                              child: TextFormField(
-                                maxLines: 1,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter some text';
-                                  }
-                                  return null;
-                                },
-                                controller: arpaymentController,
 
-                                decoration: InputDecoration(hintText:"Enter Payment Type (arabic)",contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
-                              ),
-                            ),
 
                           ],
                         )
@@ -1133,7 +1057,7 @@ class _EditPropertyState extends State<EditProperty> {
                 child: RaisedButton(
                   onPressed: ()async{
                     final databaseReference = FirebaseDatabase.instance.reference();
-                    await databaseReference.child("property").child(widget.property.id).remove().then((value) {
+                    await databaseReference.child("item").child(widget.property.id).remove().then((value) {
                       Navigator.pushReplacement(
                           context, MaterialPageRoute(builder: (BuildContext context) => AdminSearchList()));
                     });
@@ -1191,8 +1115,8 @@ class _EditPropertyState extends State<EditProperty> {
         body: jsonEncode(
           <String, dynamic>{
             'notification': <String, dynamic>{
-              'body':  'Property You Added Is live for Million Of Users' ,
-              'title': 'Your Property Is Added',
+              'body':  'Now your ad is live for milion of users' ,
+              'title': 'Your ad is Accepted',
               "sound" : "default"
             },
             'priority': 'high',

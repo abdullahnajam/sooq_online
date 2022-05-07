@@ -237,7 +237,7 @@ class _MyProfileState extends State<MyProfile> {
   Future<List<Property>> getPropertyListApproved() async {
     List<Property> list=[];
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("property").orderByChild("status").equalTo("approved").once().then((DataSnapshot dataSnapshot){
+    await databaseReference.child("item").orderByChild("status").equalTo("approved").once().then((DataSnapshot dataSnapshot){
       if(dataSnapshot.value!=null  ){
         var KEYS= dataSnapshot.value.keys;
         var DATA=dataSnapshot.value;
@@ -296,7 +296,7 @@ class _MyProfileState extends State<MyProfile> {
   Future<List<Property>> getPropertyListPending() async {
     List<Property> list=[];
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("property").orderByChild("status").equalTo("pending").once().then((DataSnapshot dataSnapshot){
+    await databaseReference.child("item").orderByChild("status").equalTo("pending").once().then((DataSnapshot dataSnapshot){
       if(dataSnapshot.value!=null  ){
         var KEYS= dataSnapshot.value.keys;
         var DATA=dataSnapshot.value;
@@ -355,7 +355,7 @@ class _MyProfileState extends State<MyProfile> {
   Future<List<Property>> getPropertyListRejected() async {
     List<Property> list=[];
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("property").orderByChild("status").equalTo("rejected").once().then((DataSnapshot dataSnapshot){
+    await databaseReference.child("item").orderByChild("status").equalTo("rejected").once().then((DataSnapshot dataSnapshot){
       if(dataSnapshot.value!=null  ){
         var KEYS= dataSnapshot.value.keys;
         var DATA=dataSnapshot.value;

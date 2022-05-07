@@ -8,6 +8,7 @@ import 'package:lottie/lottie.dart';
 import 'package:propertymarket/model/category_model.dart';
 import 'package:propertymarket/model/item_model.dart';
 import 'package:propertymarket/model/location.dart';
+import 'package:propertymarket/screens/add_item.dart';
 import 'package:propertymarket/screens/property_detail.dart';
 import 'package:propertymarket/screens/search_list.dart';
 import 'package:propertymarket/screens/search_property.dart';
@@ -16,10 +17,14 @@ import 'package:propertymarket/values/getters.dart';
 import 'package:propertymarket/values/shared_prefs.dart';
 import 'package:propertymarket/widget/property_tile.dart';
 import 'package:easy_localization/easy_localization.dart';
+
+import '../model/attribute_model.dart';
+import '../model/property_type.dart';
 enum rentOrBuy { rent, buy }
 class PropertyList extends StatefulWidget {
   String country,city,area,category,subCategory;
   String countryAr,cityAr,areaAr,categoryAr,subCategoryAr;
+  String categoryId,subCategoryId;
 
 
   PropertyList(
@@ -32,7 +37,9 @@ class PropertyList extends StatefulWidget {
       this.cityAr,
       this.areaAr,
       this.categoryAr,
-      this.subCategoryAr);
+      this.subCategoryAr,
+      this.categoryId,
+      this.subCategoryId,);
 
   @override
   _PropertyListState createState() => _PropertyListState();
@@ -84,7 +91,7 @@ class _PropertyListState extends State<PropertyList> {
     priceToController.text="0";
     areaToController.text="0";
     areaFromController.text="0";
-    getPropertyList();
+    getAttributes().whenComplete(() => getPropertyList());
   }
   void handleEvent(AdmobAdEvent event, Map<String, dynamic> args, String adType) {
     switch (event) {
@@ -174,11 +181,67 @@ class _PropertyListState extends State<PropertyList> {
   List<Item> sponsor=[];
   List<Item> latest=[];
   List<Item> searchList=[];
-  List<Item> filterList=[];
+
   List<Item> originalSearchList=[];
+  List<ItemDetail> itemWithAttributes=[];
 
   List<Item> searchSponsor=[];
   List<Item> searchRest=[];
+  List<Attribute> attributes=[];
+  List<TextEditingController> values=[];
+  Future<List<PropertyType>> getSlideList(attributeId) async {
+    List<PropertyType> list=new List();
+    final databaseReference = FirebaseDatabase.instance.reference();
+    await databaseReference.child("categories").child(widget.categoryId).child("sub_categories").child(widget.subCategoryId).child("attribute").child(attributeId).child("values").once().then((DataSnapshot dataSnapshot){
+
+      if(dataSnapshot.value!=null){
+        var KEYS= dataSnapshot.value.keys;
+        var DATA=dataSnapshot.value;
+
+        for(var individualKey in KEYS) {
+          PropertyType partnerModel = new PropertyType(
+            individualKey,
+            DATA[individualKey]['name'],
+            DATA[individualKey]['name_ar'],
+          );
+          print("key ${partnerModel.id}");
+          list.add(partnerModel);
+
+        }
+      }
+    });
+    return list;
+  }
+
+  Future getAttributes()async{
+    final databaseReference = FirebaseDatabase.instance.reference();
+    await databaseReference.child("categories").child(widget.categoryId).child("sub_categories").child(widget.subCategoryId).child("attribute").once().then((DataSnapshot dataSnapshot){
+
+      if(dataSnapshot.value!=null){
+        var KEYS= dataSnapshot.value.keys;
+        var DATA=dataSnapshot.value;
+
+        for(var individualKey in KEYS) {
+          LocationModel locationModel = new LocationModel(
+            individualKey,
+            DATA[individualKey]['name'],
+            DATA[individualKey]['name_ar'],
+            DATA[individualKey]['time'],
+          );
+          LocationModel value = new LocationModel(
+            "",
+            "",
+            "",
+            0,
+          );
+          Attribute attribute = new Attribute(locationModel,value);
+          attributes.add(attribute);
+          values.add(TextEditingController());
+
+        }
+      }
+    });
+  }
 
   getPropertyList() async {
     final databaseReference = FirebaseDatabase.instance.reference();
@@ -208,9 +271,7 @@ class _PropertyListState extends State<PropertyList> {
             DATA[individualKey]['agentName'],
             DATA[individualKey]['serial'],
             DATA[individualKey]['description_ar'],
-            DATA[individualKey]['name_ar'],
             DATA[individualKey]['agentName_ar'],
-            DATA[individualKey]['payment_ar'],
             DATA[individualKey]['city_ar'],
             DATA[individualKey]['country_ar'],
             DATA[individualKey]['area_ar'],
@@ -275,6 +336,10 @@ class _PropertyListState extends State<PropertyList> {
         list=list.reversed.toList();
         list = new List.from(sponsor)..addAll(list);
         originalSearchList=list;
+        list.forEach((element) {
+          ItemDetail _itemDetail = new ItemDetail([],element);
+          itemWithAttributes.add(_itemDetail);
+        });
       }
     });
     setState(() {
@@ -282,28 +347,59 @@ class _PropertyListState extends State<PropertyList> {
     });
   }
 
+  Future<List<AttributeModel>> getItemAttributes(itemId) async {
+    List<AttributeModel> itemAttributes=[];
+    final databaseReference = FirebaseDatabase.instance.reference();
+    await databaseReference.child("item").child(itemId).child("attributes").once().then((DataSnapshot dataSnapshot){
+      if(dataSnapshot.value!=null){
+        var KEYS= dataSnapshot.value.keys;
+        var DATA=dataSnapshot.value;
+
+        for(var individualKey in KEYS) {
+          AttributeModel model = new AttributeModel(
+            //String id,attribute_id,name,name_ar,value_id,value_name,value_name_ar;
+            individualKey,
+            DATA[individualKey]['attribute_id'],
+            DATA[individualKey]['name'],
+            DATA[individualKey]['name_ar'],
+            DATA[individualKey]['value_id'],
+            DATA[individualKey]['value_name'],
+            DATA[individualKey]['value_name_ar'],
+          );
+
+          itemAttributes.add(model);
 
 
+        }
+      }
+    });
+    return itemAttributes;
+  }
   getFilterList(){
     if(priceToController.text=="")
       priceToController.text="0";
     if(priceFromController.text=="")
       priceFromController.text="0";
-    if(areaToController.text=="")
-      areaToController.text="0";
-    if(areaFromController.text=="")
-      areaFromController.text="0";
+
     double price=double.parse(priceFromController.text);
     double priceLow=double.parse(priceToController.text);
     print("pp $price");
-    print("bed $bedroom priceTo ${priceToController.text} < price < priceFrom ${priceFromController.text}");
-    print("areaTo ${areaToController.text} areaFrom ${areaFromController.text}");
+
     List<Item> temp=[];
-    List<Item> temp2=[];
-    List<Item> temp3=[];
-    filterList=originalSearchList;
+    List<Item> filterList=[];
+
+    for(int i =0 ;i<itemWithAttributes.length;i++){
+      for(int j =0 ;j<itemWithAttributes[i].attribute.length;j++){
+        attributes.forEach((value) {
+          print("selected ${value.selectedValue.id} id ${itemWithAttributes[i].attribute[j].value_id}");
+          if(itemWithAttributes[i].attribute[j].value_id==value.selectedValue.id){
+            filterList.add(itemWithAttributes[i].item);
+          }
+        });
+      }
+    }
+    print("items in filtered = ${filterList.length}");
     if(!priceAll){
-      print(filterList.length);
       for(int i=0;i<filterList.length;i++){
         print("index $i $priceLow numPrice ${filterList[i].numericalPrice} $price");
         if(filterList[i].numericalPrice>=priceLow && filterList[i].numericalPrice<=price){
@@ -315,38 +411,14 @@ class _PropertyListState extends State<PropertyList> {
     else{
       temp=filterList;
     }
-    for(int i=0;i<temp.length;i++){
-    }
-    /*if(!bedAll){
-      for(int i=0;i<temp.length;i++){
-        if(double.parse(temp[i].beds)==bedroom){
-          temp2.add(temp[i]);
-        }
-      }
-    }
-    else{
-      temp2=temp;
-    }
-    for(int i=0;i<temp2.length;i++){
-     // print("Temp 2 $i : ${temp2[i].numericalPrice}, ${temp2[i].beds}, ${temp2[i].measurementArea}");
-    }
-    if(!areaAll){
 
-      for(int i=0;i<temp2.length;i++){
-        if((int.parse(temp2[i].measurementArea)>=double.parse(areaToController.text) && int.parse(temp2[i].measurementArea)<=double.parse(areaFromController.text))) {
-          temp3.add(temp2[i]);
-        }
-      }
-    }
-    else{
-      temp3=temp2;
-    }*/
-    for(int i=0;i<temp3.length;i++){
-      //print("Temp 3 $i : ${temp3[i].numericalPrice}, ${temp3[i].beds}, ${temp3[i].measurementArea}");
-    }
     setState(() {
-      list=temp3;
+      list=temp;
     });
+
+
+
+
   }
 
   geSortByNewtPropertyList() async {
@@ -382,9 +454,7 @@ class _PropertyListState extends State<PropertyList> {
               DATA[individualKey]['agentName'],
               DATA[individualKey]['serial'],
               DATA[individualKey]['description_ar'],
-              DATA[individualKey]['name_ar'],
               DATA[individualKey]['agentName_ar'],
-              DATA[individualKey]['payment_ar'],
               DATA[individualKey]['city_ar'],
               DATA[individualKey]['country_ar'],
               DATA[individualKey]['area_ar'],
@@ -456,6 +526,7 @@ class _PropertyListState extends State<PropertyList> {
     }
 
   }
+
   @override
   Widget build(BuildContext context) {
 
@@ -625,7 +696,7 @@ class _PropertyListState extends State<PropertyList> {
                                   children: [
                                     Icon(Icons.search,color: Colors.grey[600],),
                                     SizedBox(width: 10,),
-                                    Text('searchProperty'.tr(),style: TextStyle(color: Colors.grey[600],fontSize: 18),)
+                                    Text('search'.tr(),style: TextStyle(color: Colors.grey[600],fontSize: 18),)
                                   ],
                                 ),
                               ),
@@ -635,32 +706,6 @@ class _PropertyListState extends State<PropertyList> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-
-                                  InkWell(
-                                    onTap: (){
-                                      setState(() {
-                                        sortOpened=false;
-                                        filterOpened=true;
-                                      });
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.only(left: 10,right: 10),
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        border: Border.all(color: primaryColor),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text('filter'.tr(),style: TextStyle(color: primaryColor,fontSize: 16,fontWeight: FontWeight.w500),),
-                                          SizedBox(width: 5,),
-                                          Image.asset("assets/images/filter.png",width: 20,height: 20,color: primaryColor,)
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 10,),
                                   InkWell(
                                     onTap: (){
                                       setState(() {
@@ -673,18 +718,59 @@ class _PropertyListState extends State<PropertyList> {
                                       height: 40,
                                       decoration: BoxDecoration(
                                         color: Colors.white,
-                                        border: Border.all(color: primaryColor),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.5),
+                                            spreadRadius: 1,
+                                            blurRadius: 1,
+                                            offset: Offset(0, 3), // changes position of shadow
+                                          ),
+                                        ],
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Row(
                                         children: [
-                                          Text('sort'.tr(),style: TextStyle(color: primaryColor,fontSize: 16,fontWeight: FontWeight.w500),),
+                                          Text('sort'.tr(),style: TextStyle(color: Colors.grey[700],fontSize: 16,fontWeight: FontWeight.w500),),
                                           SizedBox(width: 5,),
-                                          Image.asset("assets/images/sort.png",width: 20,height: 20,color: primaryColor,)
+                                          Image.asset("assets/images/sort.png",width: 20,height: 20,color: Colors.grey[700],)
                                         ],
                                       ),
                                     ),
-                                  )
+                                  ),
+                                  SizedBox(width: 10,),
+                                  InkWell(
+                                    onTap: (){
+                                      setState(() {
+                                        sortOpened=false;
+                                        filterOpened=true;
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.only(left: 10,right: 10),
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.5),
+                                            spreadRadius: 1,
+                                            blurRadius: 1,
+                                            offset: Offset(0, 3), // changes position of shadow
+                                          ),
+                                        ],
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Text('filter'.tr(),style: TextStyle(color: Colors.grey[700],fontSize: 16,fontWeight: FontWeight.w500),),
+                                          SizedBox(width: 5,),
+                                          Image.asset("assets/images/filter.png",width: 20,height: 20,color: Colors.grey[700],)
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+
+
 
                                 ],
                               ),
@@ -698,7 +784,7 @@ class _PropertyListState extends State<PropertyList> {
                                 separatorBuilder: (context, position) {
                                   return Container(
                                     margin: EdgeInsets.only(bottom: 10),
-                                      child: (position != 0 && position % 4 == 0) ?
+                                      child: (position != 0 && position % 2 == 0) ?
                                   AdmobBanner(
                                     adUnitId: Platform.isAndroid ? androidAdmobBanner : iosAdmobBanner,
                                     adSize: bannerSize,
@@ -806,7 +892,7 @@ class _PropertyListState extends State<PropertyList> {
                         Align(
                           alignment: Alignment.bottomCenter,
                           child: AnimatedContainer(
-                            height: filterOpened?MediaQuery.of(context).size.height*0.72:0,
+                            height: filterOpened?MediaQuery.of(context).size.height*0.7:0,
                             width: MediaQuery.of(context).size.width,
                             duration: const Duration(seconds: 2),
                             curve: Curves.fastOutSlowIn,
@@ -823,42 +909,8 @@ class _PropertyListState extends State<PropertyList> {
                                   margin: EdgeInsets.all(5),
                                   child: Text('filter'.tr(),style: TextStyle(fontSize: 22,fontWeight: FontWeight.w500,color: Colors.black),),
                                 ),
-                                Container(
-                                  margin: EdgeInsets.all(5),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text('bedroom'.tr(),style: TextStyle(fontSize: 18,fontWeight: FontWeight.w400,color: Colors.black),),
-                                      Row(
-                                        children: [
-                                          Text('all'.tr(),style: TextStyle(fontSize: 15,fontWeight: FontWeight.w300,color: Colors.black),),
-                                          Checkbox(
-                                            value: bedAll,
-                                            onChanged: (bool value) {
-                                              setState(() {
-                                                bedAll = value;
-                                              });
-                                            },
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  )
-                                ),
 
-                                Slider(
-                                  value: bedroom,
-                                  onChanged: (newBedroom){
-                                    setState(() {
-                                      bedroom=newBedroom;
-                                    });
-                                  },
-                                  min: 0,
-                                  max: 6,
-                                  divisions: 6,
-                                  label: "$bedroom",
 
-                                ),
 
                                 Container(
                                     margin: EdgeInsets.all(5),
@@ -979,131 +1031,96 @@ class _PropertyListState extends State<PropertyList> {
                                     ],
                                   ),
                                 ),
-
-                                Container(
-                                    margin: EdgeInsets.all(5),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text('area'.tr(),style: TextStyle(fontSize: 18,fontWeight: FontWeight.w400,color: Colors.black),),
-                                        Row(
-                                          children: [
-                                            Text('all'.tr(),style: TextStyle(fontSize: 15,fontWeight: FontWeight.w300,color: Colors.black),),
-                                            Checkbox(
-                                              value: areaAll,
-                                              onChanged: (bool value) {
-                                                setState(() {
-                                                  areaAll = value;
-                                                });
-                                              },
-                                            ),
-                                          ],
-                                        )
-                                      ],
-                                    )
-                                ),
-                                Container(
-                                  margin: EdgeInsets.all(5),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 4,
-                                        child:TextFormField(
-                                          keyboardType: TextInputType.number,
-                                          controller: areaToController,
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              return 'Please enter some text';
-                                            }
-                                            return null;
-                                          },
-                                          decoration: InputDecoration(
-                                            contentPadding: EdgeInsets.all(15),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(7.0),
-                                              borderSide: BorderSide(
-                                                color: Colors.transparent,
+                                ListView.builder(
+                                  padding: EdgeInsets.all(5),
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  itemCount: attributes.length,
+                                  itemBuilder: (BuildContext context,int index){
+                                    return Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(right: 10,left: 10),
+                                              child: Container(
+                                                height: 50,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey[200],
+                                                  borderRadius: BorderRadius.circular(7),
+                                                ),
+                                                alignment: Alignment.center,
+                                                child: Text(context.locale.languageCode=="en"?attributes[index].attribute.name:attributes[index].attribute.name_ar,style: TextStyle(fontSize: 17),),
                                               ),
                                             ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(7.0),
-                                              borderSide: BorderSide(
-                                                  color: Colors.transparent,
-                                                  width: 0.5
-                                              ),
-                                            ),
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(7.0),
-                                              borderSide: BorderSide(
-                                                color: Colors.transparent,
-                                                width: 0.5,
-                                              ),
-                                            ),
-                                            filled: true,
-                                            fillColor: Colors.grey[200],
-                                            hintText: "Enter Area",
-                                            // If  you are using latest version of flutter then lable text and hint text shown like this
-                                            // if you r using flutter less then 1.20.* then maybe this is not working properly
-                                            floatingLabelBehavior: FloatingLabelBehavior.always,
                                           ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                          flex: 1,
-                                          child: Container(
-                                            child: Text('to'.tr(),textAlign: TextAlign.center,),
-                                          )
-                                      ),
-                                      Expanded(
-                                        flex: 4,
-                                        child:TextFormField(
-                                          keyboardType: TextInputType.number,
-                                          controller: areaFromController,
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              return 'Please enter some text';
-                                            }
-                                            return null;
-                                          },
-                                          decoration: InputDecoration(
-                                            contentPadding: EdgeInsets.all(15),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(7.0),
-                                              borderSide: BorderSide(
-                                                color: Colors.transparent,
+                                          Expanded(
+                                            flex: 1,
+                                            child:Padding(
+                                              padding: EdgeInsets.only(right: 10,left: 10),
+                                              child: TextFormField(
+                                                readOnly: true,
+                                                onTap: (){
+                                                  bool val=context.locale.languageCode=="en"?true:false;
+                                                  _showValueDialog(val, index, attributes[index].attribute.name, attributes[index].attribute.id);
+                                                },
+                                                validator: (value) {
+                                                  if (value == null || value.isEmpty) {
+                                                    return 'Please enter some text';
+                                                  }
+                                                  return null;
+                                                },
+                                                controller: values[index],
+                                                decoration: InputDecoration(
+                                                  contentPadding: EdgeInsets.all(15),
+                                                  focusedBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(7.0),
+                                                    borderSide: BorderSide(
+                                                      color: Colors.transparent,
+                                                    ),
+                                                  ),
+                                                  enabledBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(7.0),
+                                                    borderSide: BorderSide(
+                                                        color: Colors.transparent,
+                                                        width: 0.5
+                                                    ),
+                                                  ),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(7.0),
+                                                    borderSide: BorderSide(
+                                                      color: Colors.transparent,
+                                                      width: 0.5,
+                                                    ),
+                                                  ),
+                                                  filled: true,
+                                                  fillColor: Colors.grey[200],
+                                                  hintText: 'select'.tr(),
+                                                  // If  you are using latest version of flutter then lable text and hint text shown like this
+                                                  // if you r using flutter less then 1.20.* then maybe this is not working properly
+                                                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                                                ),
                                               ),
                                             ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(7.0),
-                                              borderSide: BorderSide(
-                                                  color: Colors.transparent,
-                                                  width: 0.5
-                                              ),
-                                            ),
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(7.0),
-                                              borderSide: BorderSide(
-                                                color: Colors.transparent,
-                                                width: 0.5,
-                                              ),
-                                            ),
-                                            filled: true,
-                                            fillColor: Colors.grey[200],
-                                            hintText: "Enter Area",
-                                            // If  you are using latest version of flutter then lable text and hint text shown like this
-                                            // if you r using flutter less then 1.20.* then maybe this is not working properly
-                                            floatingLabelBehavior: FloatingLabelBehavior.always,
                                           ),
-                                        ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 ),
                                 InkWell(
-                                  onTap: (){
+                                  onTap: ()async{
                                     setState(() {
                                       filterOpened=false;
                                     });
+                                    for(int i=0;i<itemWithAttributes.length;i++){
+                                      List<AttributeModel> itemAttributes=[];
+                                      itemAttributes=await getItemAttributes(itemWithAttributes[i].item.id);
+                                      itemWithAttributes[i].attribute=itemAttributes;
+                                    }
+                                    print("lllll ${itemWithAttributes.length}");
                                     getFilterList();
 
                                   },
@@ -1125,7 +1142,7 @@ class _PropertyListState extends State<PropertyList> {
                                           ],
                                         )
                                     ),
-                                    child: Text('findProperty'.tr(),textAlign: TextAlign.center,style: TextStyle(color: Colors.white,fontWeight: FontWeight.w600,fontSize: 20),),
+                                    child: Text('search'.tr(),textAlign: TextAlign.center,style: TextStyle(color: Colors.white,fontWeight: FontWeight.w600,fontSize: 20),),
                                   ),
                                 )
 
@@ -1171,6 +1188,159 @@ class _PropertyListState extends State<PropertyList> {
         ),
 
       ),
+    );
+  }
+
+  Future<void> _showValueDialog(bool val,int i,String title,String id) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true, // user must tap button!
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: const BorderRadius.all(
+              Radius.circular(10.0),
+            ),
+          ),
+          insetAnimationDuration: const Duration(seconds: 1),
+          insetAnimationCurve: Curves.fastOutSlowIn,
+          elevation: 2,
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.4,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Container(
+                        margin: EdgeInsets.all(10),
+                        child: Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 25,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        margin: EdgeInsets.all(10),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+                Expanded(
+                  child: FutureBuilder<List<LocationModel>>(
+                    future: getValueList(id,widget.categoryId,widget.subCategoryId),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        if (snapshot.data != null && snapshot.data.length > 0) {
+                          return Container(
+                              margin: EdgeInsets.all(10),
+                              child: Scrollbar(
+                                controller: _scrollController,
+                                isAlwaysShown:
+                                snapshot.data.length > 3 ? true : false,
+                                child: ListView.separated(
+                                  controller: _scrollController,
+                                  separatorBuilder: (context, index) {
+                                    return Divider(
+                                      color: Colors.grey,
+                                    );
+                                  },
+                                  shrinkWrap: true,
+                                  itemCount: snapshot.data.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          !val
+                                              ?  values[i].text  = snapshot.data[index].name_ar
+                                              : values[i].text = snapshot.data[index].name ;
+
+                                          LocationModel model=LocationModel(
+                                            snapshot.data[i].id,
+                                            snapshot.data[i].name,
+                                            snapshot.data[i].name_ar,
+                                            snapshot.data[i].time,
+                                          );
+                                          attributes[i].selectedValue = model;
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        margin: EdgeInsets.all(5),
+                                        child: Text(
+                                          !val
+                                              ? snapshot.data[index].name_ar
+                                              : snapshot.data[index].name,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.black),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ));
+                        } else {
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                child: Lottie.asset(
+                                  'assets/json/empty.json',
+                                  width:
+                                  MediaQuery.of(context).size.width * 0.4,
+                                  height:
+                                  MediaQuery.of(context).size.height * 0.2,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Container(
+                                  child: Text(
+                                    'noData'.tr(),
+                                    style: TextStyle(fontSize: 16),
+                                  )),
+                            ],
+                          );
+                        }
+                      } else if (snapshot.hasError) {
+                        return Text('Error : ${snapshot.error}');
+                      } else {
+                        return new Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
+                  ),
+                ),
+                SizedBox(
+                  height: 15,
+                )
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
   Future<void> showSearchDialog(BuildContext context) async {
@@ -1240,7 +1410,7 @@ class _PropertyListState extends State<PropertyList> {
                             alignment: Alignment.center,
                             child: Container(
                               margin: EdgeInsets.only(top: 20,),
-                              child: Text('search'.tr(),textAlign: TextAlign.center,style: TextStyle(fontWeight: FontWeight.w400,fontSize: 18)),
+                              child: Text('searchDialogHeadline'.tr(),textAlign: TextAlign.center,style: TextStyle(fontWeight: FontWeight.w400,fontSize: 18)),
                             ),
                           ),
                           Align(
@@ -1759,374 +1929,7 @@ class _PropertyListState extends State<PropertyList> {
 
                               SizedBox(height: 15,),
 
-                              Text('selectCategory'.tr(),style: TextStyle(fontWeight: FontWeight.w600,color: Colors.grey[600])),
-                              SizedBox(height: 7,),
-                              Row(
-                                children: [
-                                  Image.asset("assets/images/country.png",width: 30,height: 30,),
-                                  SizedBox(width: 10,),
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: ()=>sharedPref.getPref().then((value){
-                                        return showDialog<void>(
-                                          context: context,
-                                          barrierDismissible: true, // user must tap button!
-                                          builder: (BuildContext context) {
-                                            return Dialog(
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: const BorderRadius.all(
-                                                  Radius.circular(10.0),
-                                                ),
-                                              ),
-                                              insetAnimationDuration: const Duration(seconds: 1),
-                                              insetAnimationCurve: Curves.fastOutSlowIn,
-                                              elevation: 2,
-                                              child: Container(
-                                                height: MediaQuery.of(context).size.height * 0.4,
-                                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
-                                                child: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Stack(
-                                                      children: [
-                                                        Align(
-                                                          alignment: Alignment.center,
-                                                          child: Container(
-                                                            margin: EdgeInsets.all(10),
-                                                            child: Text(
-                                                              'categorySelect'.tr(),
-                                                              textAlign: TextAlign.center,
-                                                              style: TextStyle(
-                                                                  fontSize: 25,
-                                                                  color: Colors.black,
-                                                                  fontWeight: FontWeight.w600),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Align(
-                                                          alignment: Alignment.centerRight,
-                                                          child: Container(
-                                                            margin: EdgeInsets.all(10),
-                                                            child: IconButton(
-                                                              icon: Icon(
-                                                                Icons.close,
-                                                                color: Colors.grey,
-                                                              ),
-                                                              onPressed: () => Navigator.pop(context),
-                                                            ),
-                                                          ),
-                                                        )
-                                                      ],
-                                                    ),
-                                                    Expanded(
-                                                      child: FutureBuilder<List<CategoryModel>>(
-                                                        future: getCategoryList(),
-                                                        builder: (context, snapshot) {
-                                                          if (snapshot.hasData) {
-                                                            if (snapshot.data != null && snapshot.data.length > 0) {
-                                                              return Container(
-                                                                  margin: EdgeInsets.all(10),
-                                                                  child: Scrollbar(
-                                                                    controller: _scrollController,
-                                                                    isAlwaysShown:
-                                                                    snapshot.data.length > 3 ? true : false,
-                                                                    child: ListView.separated(
-                                                                      controller: _scrollController,
-                                                                      separatorBuilder: (context, index) {
-                                                                        return Divider(
-                                                                          color: Colors.grey,
-                                                                        );
-                                                                      },
-                                                                      shrinkWrap: true,
-                                                                      itemCount: snapshot.data.length,
-                                                                      itemBuilder:
-                                                                          (BuildContext context, int index) {
-                                                                        return GestureDetector(
-                                                                          onTap: () {
-                                                                            setState(() {
-                                                                              !value?_selectedCategoryName=snapshot.data[index].name_ar:_selectedCategoryName=snapshot.data[index].name;
-                                                                              arCategory = snapshot.data[index].name_ar ;
-                                                                              engCategory = snapshot.data[index].name ;
-                                                                              selectedCategoryId = snapshot.data[index].id;
-                                                                            });
 
-                                                                            Navigator.pop(context);
-                                                                          },
-                                                                          child: Container(
-                                                                            margin: EdgeInsets.all(5),
-                                                                            child: Text(
-                                                                              !value
-                                                                                  ? snapshot.data[index].name_ar
-                                                                                  : snapshot.data[index].name,
-                                                                              textAlign: TextAlign.center,
-                                                                              style: TextStyle(
-                                                                                  fontSize: 16,
-                                                                                  color: Colors.black),
-                                                                            ),
-                                                                          ),
-                                                                        );
-                                                                      },
-                                                                    ),
-                                                                  ));
-                                                            } else {
-                                                              return Column(
-                                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                                children: [
-                                                                  Container(
-                                                                    child: Lottie.asset(
-                                                                      'assets/json/empty.json',
-                                                                      width:
-                                                                      MediaQuery.of(context).size.width * 0.4,
-                                                                      height:
-                                                                      MediaQuery.of(context).size.height * 0.2,
-                                                                      fit: BoxFit.fill,
-                                                                    ),
-                                                                  ),
-                                                                  SizedBox(
-                                                                    height: 10,
-                                                                  ),
-                                                                  Container(
-                                                                      child: Text(
-                                                                        'noData'.tr(),
-                                                                        style: TextStyle(fontSize: 16),
-                                                                      )),
-                                                                ],
-                                                              );
-                                                            }
-                                                          } else if (snapshot.hasError) {
-                                                            return Text('Error : ${snapshot.error}');
-                                                          } else {
-                                                            return new Center(
-                                                              child: CircularProgressIndicator(),
-                                                            );
-                                                          }
-                                                        },
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 15,
-                                                    )
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        );
-                                      }),
-                                      child: Container(
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                            border: Border.all(color: Colors.blue[200]),
-                                            borderRadius: BorderRadius.circular(7)
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Container(
-                                                padding: EdgeInsets.only(left: 10,right: 10),
-                                                child: Text(_selectedCategoryName,style: TextStyle(color: Colors.grey[600]),),
-
-                                              ),
-                                            ),
-                                            Icon(Icons.keyboard_arrow_down,color: Colors.blue,)
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              ),
-
-                              SizedBox(height: 15,),
-
-                              Text('selectSubCategory'.tr(),style: TextStyle(fontWeight: FontWeight.w600,color: Colors.grey[600])),
-                              SizedBox(height: 7,),
-                              Row(
-                                children: [
-                                  Image.asset("assets/images/city.png",width: 30,height: 30,),
-                                  SizedBox(width: 10,),
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: (){
-                                        if(selectedCategoryId!=null){
-                                          sharedPref.getPref().then((value){
-                                            return showDialog<void>(
-                                              context: context,
-                                              barrierDismissible: true, // user must tap button!
-                                              builder: (BuildContext context) {
-                                                return Dialog(
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: const BorderRadius.all(
-                                                      Radius.circular(10.0),
-                                                    ),
-                                                  ),
-                                                  insetAnimationDuration: const Duration(seconds: 1),
-                                                  insetAnimationCurve: Curves.fastOutSlowIn,
-                                                  elevation: 2,
-                                                  child: Container(
-                                                    height: MediaQuery.of(context).size.height * 0.4,
-                                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
-                                                    child: Column(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        Stack(
-                                                          children: [
-                                                            Align(
-                                                              alignment: Alignment.center,
-                                                              child: Container(
-                                                                margin: EdgeInsets.all(10),
-                                                                child: Text(
-                                                                  'SubCategorySelect'.tr(),
-                                                                  textAlign: TextAlign.center,
-                                                                  style: TextStyle(
-                                                                      fontSize: 25,
-                                                                      color: Colors.black,
-                                                                      fontWeight: FontWeight.w600),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Align(
-                                                              alignment: Alignment.centerRight,
-                                                              child: Container(
-                                                                margin: EdgeInsets.all(10),
-                                                                child: IconButton(
-                                                                  icon: Icon(
-                                                                    Icons.close,
-                                                                    color: Colors.grey,
-                                                                  ),
-                                                                  onPressed: () => Navigator.pop(context),
-                                                                ),
-                                                              ),
-                                                            )
-                                                          ],
-                                                        ),
-                                                        Expanded(
-                                                          child: FutureBuilder<List<CategoryModel>>(
-                                                            future: getSubCategoryList(selectedCategoryId),
-                                                            builder: (context, snapshot) {
-                                                              if (snapshot.hasData) {
-                                                                if (snapshot.data != null && snapshot.data.length > 0) {
-                                                                  return Container(
-                                                                      margin: EdgeInsets.all(10),
-                                                                      child: Scrollbar(
-                                                                        controller: _scrollController,
-                                                                        isAlwaysShown:
-                                                                        snapshot.data.length > 3 ? true : false,
-                                                                        child: ListView.separated(
-                                                                          controller: _scrollController,
-                                                                          separatorBuilder: (context, index) {
-                                                                            return Divider(
-                                                                              color: Colors.grey,
-                                                                            );
-                                                                          },
-                                                                          shrinkWrap: true,
-                                                                          itemCount: snapshot.data.length,
-                                                                          itemBuilder:
-                                                                              (BuildContext context, int index) {
-                                                                            return GestureDetector(
-                                                                              onTap: () {
-                                                                                setState(() {
-                                                                                  !value
-                                                                                      ?  _selectedSubCategoryName = snapshot.data[index].name_ar
-                                                                                      : _selectedSubCategoryName = snapshot.data[index].name ;
-
-                                                                                  arSubCategory = snapshot.data[index].name_ar ;
-                                                                                  engSubCategory = snapshot.data[index].name ;
-                                                                                  selectedSubCategoryId = snapshot.data[index].id;
-                                                                                });
-                                                                                Navigator.pop(context);
-                                                                              },
-                                                                              child: Container(
-                                                                                margin: EdgeInsets.all(5),
-                                                                                child: Text(
-                                                                                  !value
-                                                                                      ? snapshot.data[index].name_ar
-                                                                                      : snapshot.data[index].name,
-                                                                                  textAlign: TextAlign.center,
-                                                                                  style: TextStyle(
-                                                                                      fontSize: 16,
-                                                                                      color: Colors.black),
-                                                                                ),
-                                                                              ),
-                                                                            );
-                                                                          },
-                                                                        ),
-                                                                      ));
-                                                                } else {
-                                                                  return Column(
-                                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                                    children: [
-                                                                      Container(
-                                                                        child: Lottie.asset(
-                                                                          'assets/json/empty.json',
-                                                                          width:
-                                                                          MediaQuery.of(context).size.width * 0.4,
-                                                                          height:
-                                                                          MediaQuery.of(context).size.height * 0.2,
-                                                                          fit: BoxFit.fill,
-                                                                        ),
-                                                                      ),
-                                                                      SizedBox(
-                                                                        height: 10,
-                                                                      ),
-                                                                      Container(
-                                                                          child: Text(
-                                                                            'noData'.tr(),
-                                                                            style: TextStyle(fontSize: 16),
-                                                                          )),
-                                                                    ],
-                                                                  );
-                                                                }
-                                                              } else if (snapshot.hasError) {
-                                                                return Text('Error : ${snapshot.error}');
-                                                              } else {
-                                                                return new Center(
-                                                                  child: CircularProgressIndicator(),
-                                                                );
-                                                              }
-                                                            },
-                                                          ),
-                                                        ),
-                                                        SizedBox(
-                                                          height: 15,
-                                                        )
-                                                      ],
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                          });
-                                        }
-                                        else{
-                                          //Toast.show("Please select above", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
-                                        }
-                                      },
-                                      child: Container(
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                            border: Border.all(color: Colors.blue[200]),
-                                            borderRadius: BorderRadius.circular(7)
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Container(
-                                                padding: EdgeInsets.only(left: 10,right: 10),
-                                                child: Text(_selectedSubCategoryName,style: TextStyle(color: Colors.grey[600]),),
-
-                                              ),
-                                            ),
-                                            Icon(Icons.keyboard_arrow_down,color: Colors.blue,)
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              ),
 
 
 
@@ -2145,13 +1948,13 @@ class _PropertyListState extends State<PropertyList> {
                             interstitialAd.show();
                             if(selectedCityId!=null && selectedCountryId!=null && _selectedAreaName!=null && selectedTypeId!=null){
                               Navigator.pop(context);
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => PropertyList(engCountry,engCity,engArea,engCategory,engSubCategory,arCountry,arCity,arArea,arCategory,arSubCategory)));
+                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => PropertyList(engCountry,engCity,engArea,widget.category,widget.subCategory,arCountry,arCity,arArea,widget.categoryAr,widget.subCategoryAr,widget.categoryId,widget.subCategoryId)));
                             }
                           }
                           else {
                             if(selectedCityId!=null && selectedCountryId!=null && _selectedAreaName!=null && selectedTypeId!=null){
                               Navigator.pop(context);
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => PropertyList(engCountry,engCity,engArea,engCategory,engSubCategory,arCountry,arCity,arArea,arCategory,arSubCategory)));
+                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => PropertyList(engCountry,engCity,engArea,widget.category,widget.subCategory,arCountry,arCity,arArea,widget.categoryAr,widget.subCategoryAr,widget.categoryId,widget.subCategoryId)));
                             }
                           }
 
@@ -2180,7 +1983,7 @@ class _PropertyListState extends State<PropertyList> {
                                 ],
                               )*/
                           ),
-                          child: Text('search'.tr(),textAlign: TextAlign.center,style: TextStyle(color: Colors.white,fontWeight: FontWeight.w600,fontSize: 20),),
+                          child: Text('searchIn'.tr(),textAlign: TextAlign.center,style: TextStyle(color: Colors.white,fontWeight: FontWeight.w600,fontSize: 20),),
                         ),
                       ),
 
@@ -2194,4 +1997,10 @@ class _PropertyListState extends State<PropertyList> {
       },
     );
   }
+}
+class ItemDetail{
+  List<AttributeModel> attribute;
+  Item item;
+
+  ItemDetail(this.attribute, this.item);
 }

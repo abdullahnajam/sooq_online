@@ -123,11 +123,11 @@ class _PropertyTileState extends State<PropertyTile> {
                         ),
 
 
-                        Text(widget.lang?widget.property.name:widget.property.name_ar,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 20,color: Colors.black),),
+                        Text(widget.property.name,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 20,color: Colors.black),),
                         SizedBox(height: 5,),
                         Text(timeAgoSinceDate(widget.property.datePosted),style: TextStyle(fontSize: 10,fontWeight: FontWeight.w300),),
                         SizedBox(height: 5,),
-                        Text(widget.lang?"${widget.property.price_en.toString()}":"${widget.property.price_ar.toString()}",style: TextStyle(fontSize: 22,color: primaryColor,fontWeight: FontWeight.bold),),
+                        Text(widget.property.price_en.toString(),style: TextStyle(fontSize: 22,color: primaryColor,fontWeight: FontWeight.bold),),
                         SizedBox(height: 5,),
                         Text(widget.lang?widget.property.location:"${widget.property.area_ar}, ${widget.property.city_ar}, ${widget.property.country_ar}",style: TextStyle(fontSize: 15,color: Colors.black),),
                         SizedBox(height: 5,),

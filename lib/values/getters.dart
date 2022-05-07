@@ -104,10 +104,11 @@ Future<List<CategoryModel>> getCategoryList() async {
   });
   return list;
 }
-Future<List<LocationModel>> getValueList(String id,selectedCategoryId) async {
+Future<List<LocationModel>> getValueList(attributeId,selectedCategoryId,selectedSubCategoryId) async {
   List<LocationModel> list=new List();
   final databaseReference = FirebaseDatabase.instance.reference();
-  await databaseReference.child("categories").child(selectedCategoryId).child("attribute").child(id).child("values").once().then((DataSnapshot dataSnapshot){
+  await databaseReference.child("categories").child(selectedCategoryId).child("sub_categories").child(selectedSubCategoryId)
+      .child("attribute").child(attributeId).child("values").once().then((DataSnapshot dataSnapshot){
     if(dataSnapshot.value!=null){
       var KEYS= dataSnapshot.value.keys;
       var DATA=dataSnapshot.value;

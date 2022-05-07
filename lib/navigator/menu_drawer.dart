@@ -251,7 +251,7 @@ class MenuDrawerState extends State<MenuDrawer> {
               else {
                 Navigator.push(context, new MaterialPageRoute(
                     builder: (context) =>
-                        Chat(peerId: adminId, name: 'Property Market',)));
+                        Chat(peerId: adminId, name: 'Sooq Online',)));
               }
             },
             child: Container(
@@ -271,7 +271,7 @@ class MenuDrawerState extends State<MenuDrawer> {
           InkWell(
             onTap: () async {
               User user = FirebaseAuth.instance.currentUser;
-             // SharedPref sp = SharedPref();
+              // SharedPref sp = SharedPref();
               if (user != null) {
                 final FirebaseAuth _auth = FirebaseAuth.instance;
                 final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -280,16 +280,16 @@ class MenuDrawerState extends State<MenuDrawer> {
                   "lastSeen" : DateTime.now().millisecondsSinceEpoch,
                 });
                 _signOut().then((value) {
-                 // sp.setIsLogin(false);
+                  // sp.setIsLogin(false);
                   Navigator.push(context, new MaterialPageRoute(
                       builder: (context) => BottomBar(0)));
                 });
               }
               else
-                {
-                  Navigator.push(context, new MaterialPageRoute(
-                      builder: (context) => Login()));
-                }
+              {
+                Navigator.push(context, new MaterialPageRoute(
+                    builder: (context) => Login()));
+              }
 
             },
             child: Container(
@@ -301,7 +301,7 @@ class MenuDrawerState extends State<MenuDrawer> {
                   Container(width: 20),
                   Expanded(
                       child: FirebaseAuth.instance.currentUser == null ? Text(
-                          'login'.tr(),) : Text('logout'.tr())),
+                        'login'.tr(),) : Text('logout'.tr())),
                 ],
               ),
             ),
@@ -309,26 +309,25 @@ class MenuDrawerState extends State<MenuDrawer> {
 
           SizedBox(height: 10,),
           InkWell(
-              onTap: () async {
-                await canLaunch(url)
-                    ? await launch(url)
-                    : throw 'Could not launch $url';},
-              child : Container(
-                height: 40, padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-          children: <Widget>[
-          Icon(Icons.assignment_outlined, color: MyColors.grey_20, size: 20),
-          Container(width: 20),
-          Expanded(child: Text('privacy'.tr(),)),
-        ],
-      ),
-              ),
-    ),
+            onTap: () async {
+              await launch(url);
 
-    ]
-    ,
-    )
-    ,
+            },
+            child : Container(
+              height: 40, padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: <Widget>[
+                  Icon(Icons.assignment_outlined, color: MyColors.grey_20, size: 20),
+                  Container(width: 20),
+                  Expanded(child: Text('privacy'.tr(),)),
+                ],
+              ),
+            ),
+          ),
+
+        ]
+        ,
+      )
     );
   }
 

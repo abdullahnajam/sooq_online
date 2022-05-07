@@ -268,18 +268,9 @@ class _BottomNavigationState extends State<BottomBar>{
 
     }
     if(index==1){
-      if (await interstitialAd.isLoaded) {
-        interstitialAd.show();
-        setState(() {
-          _currentIndex = index;
-        });
-      }
-      else {
-        setState(() {
-          _currentIndex = index;
-        });
-
-      }
+      setState(() {
+        _currentIndex = index;
+      });
     }
     else if(index==2){
       setState(() {
@@ -325,17 +316,9 @@ class _BottomNavigationState extends State<BottomBar>{
       }
       else{
 
-        if (await interstitialAd.isLoaded) {
-          interstitialAd.show();
-          setState(() {
-            _currentIndex = index;
-          });
-        }
-        else {
-          setState(() {
-            _currentIndex = index;
-          });
-        }
+        setState(() {
+          _currentIndex = index;
+        });
 
       }
 
@@ -355,7 +338,7 @@ class _BottomNavigationState extends State<BottomBar>{
       backgroundColor: Colors.grey[100],
       bottomNavigationBar: BottomNavigationBar(
         showUnselectedLabels: true,
-        unselectedItemColor:Color(0xffabc6ff),
+        unselectedItemColor:Color(0xffA8BFE4),
         selectedItemColor: primaryColor,
         onTap: onTabTapped, // new
         currentIndex: _currentIndex,

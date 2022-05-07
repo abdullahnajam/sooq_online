@@ -9,9 +9,9 @@ import 'package:propertymarket/navigator/admin_drawer.dart';
 import 'package:propertymarket/values/constants.dart';
 import 'package:toast/toast.dart';
 class AddValues extends StatefulWidget {
-  String categoryId,attributeId;
+  String categoryId,attributeId,sid;
 
-  AddValues(this.categoryId,this.attributeId);
+  AddValues(this.categoryId,this.attributeId,this.sid);
 
   @override
   _AddValuesState createState() => _AddValuesState();
@@ -21,13 +21,13 @@ class _AddValuesState extends State<AddValues> {
 
   submitData(){
     final databaseReference = FirebaseDatabase.instance.reference();
-    databaseReference.child("categories").child(widget.categoryId).child("attribute").child(widget.attributeId).child("values").push().set({
+    databaseReference.child("categories").child(widget.categoryId).child("sub_categories").child(widget.sid).child("attribute").child(widget.attributeId).child("values").push().set({
       'name': _controller.text,
       'name_ar': _arcontroller.text,
       'time':DateTime.now().millisecondsSinceEpoch
     }).then((value) {
       Toast.show("Submitted", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => AddValues(widget.categoryId,widget.attributeId)));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => AddValues(widget.categoryId,widget.attributeId,widget.sid)));
 
 
     }).catchError((onError){
@@ -38,7 +38,7 @@ class _AddValuesState extends State<AddValues> {
   Future<List<PropertyType>> getSlideList() async {
     List<PropertyType> list=new List();
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("categories").child(widget.categoryId).child("attribute").child(widget.attributeId).child("values").once().then((DataSnapshot dataSnapshot){
+    await databaseReference.child("categories").child(widget.categoryId).child("sub_categories").child(widget.sid).child("attribute").child(widget.attributeId).child("values").once().then((DataSnapshot dataSnapshot){
 
       if(dataSnapshot.value!=null){
         var KEYS= dataSnapshot.value.keys;
@@ -201,9 +201,9 @@ class _AddValuesState extends State<AddValues> {
                                               child: RaisedButton(
                                                 onPressed: ()async{
                                                   final databaseReference = FirebaseDatabase.instance.reference();
-                                                  await databaseReference.child("categories").child(widget.categoryId).child("attribute").child(widget.attributeId).child("values").child(snapshot.data[index].id).remove().then((value) {
+                                                  await databaseReference.child("categories").child(widget.categoryId).child("sub_categories").child(widget.sid).child("attribute").child(widget.attributeId).child("values").child(snapshot.data[index].id).remove().then((value) {
                                                     Navigator.pushReplacement(
-                                                        context, MaterialPageRoute(builder: (BuildContext context) => AddValues(widget.categoryId,widget.attributeId)));
+                                                        context, MaterialPageRoute(builder: (BuildContext context) => AddValues(widget.categoryId,widget.attributeId,widget.sid)));
                                                   });
                                                 },
                                                 color: Colors.red,

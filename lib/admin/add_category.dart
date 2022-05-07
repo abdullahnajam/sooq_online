@@ -314,11 +314,8 @@ class _AddCategoryState extends State<AddCategory> {
                                   subtitle: Text(snapshot.data[index].name_ar),
                                   trailing: PopupMenuButton(
                                     onSelected: (result){
-                                      if (result == 0) {
-                                        Navigator.of(context)
-                                            .push(MaterialPageRoute(builder: (context) => AddAttributes(snapshot.data[index].id)));
-                                      }
-                                      else if (result == 1) {
+
+                                       if (result == 1) {
                                         Navigator.of(context)
                                             .push(MaterialPageRoute(builder: (context) => AddSubCategory(snapshot.data[index].id)));
                                       }
@@ -326,10 +323,6 @@ class _AddCategoryState extends State<AddCategory> {
                                     icon: Icon(Icons.more_vert),
                                     itemBuilder: (BuildContext context) => <PopupMenuEntry>[
 
-                                      PopupMenuItem(
-                                        value: 0,
-                                        child: Text("Attributes"),
-                                      ),
                                       PopupMenuItem(
                                         value: 1,
                                         child: Text("Sub Categories"),

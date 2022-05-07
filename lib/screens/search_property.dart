@@ -35,7 +35,7 @@ class NameSearch extends SearchDelegate<String> {
   @override
   Widget buildResults(BuildContext context) {
     final suggestions = names.where((name) {
-      return name.name_ar.contains(query);
+      return name.name.contains(query);
     });
 
     return ListView.builder(
@@ -54,7 +54,7 @@ class NameSearch extends SearchDelegate<String> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    final suggestions = names.where((name) {return name.name_ar.contains(query);});
+    final suggestions = names.where((name) {return name.name.contains(query);});
 
     return ListView.builder(
       itemCount: suggestions.length,

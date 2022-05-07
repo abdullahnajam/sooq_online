@@ -385,7 +385,7 @@ class _PropertyDetailState extends State<PropertyDetail> {
                   color: Colors.grey[200],
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Center(child: Text(widget.lang?widget._property.name:widget._property.name_ar,style: TextStyle(color: Colors.black,fontSize: 20,fontWeight: FontWeight.w600),)),
+                    child: Center(child: Text(widget._property.name,style: TextStyle(color: Colors.black,fontSize: 20,fontWeight: FontWeight.w600),)),
                   ),
                 ),
                 Container(color: Colors.grey[300],height: 3,),
@@ -431,7 +431,8 @@ class _PropertyDetailState extends State<PropertyDetail> {
                       //type
                       Container(
                         padding:EdgeInsets.only(top: 3,bottom: 3) ,
-                        color: Colors.grey[200],
+                        //color: Colors.grey[200],
+                        color: Colors.white,
                         child: Row(
                           children: [
                             SizedBox(width: 10,),
@@ -483,7 +484,7 @@ class _PropertyDetailState extends State<PropertyDetail> {
                       //price
                       Container(
                         padding:EdgeInsets.only(top: 3,bottom: 3) ,
-                        color: Colors.grey[200],
+                        color: Colors.white,
                         child: Row(
                           children: [
                             SizedBox(width: 10,),
@@ -499,7 +500,7 @@ class _PropertyDetailState extends State<PropertyDetail> {
                             ),
                             Expanded(
                               flex: 2,
-                              child: Text(widget.lang?widget._property.price_en:widget._property.price_ar.toString(),style: TextStyle(fontSize: 16,fontWeight: FontWeight.w400),),
+                              child: Text(widget._property.price_en.toString(),style: TextStyle(fontSize: 16,fontWeight: FontWeight.w400),),
                             ),
 
                           ],
@@ -509,6 +510,7 @@ class _PropertyDetailState extends State<PropertyDetail> {
                       //payment type
                       Container(
                         padding:EdgeInsets.only(top: 3,bottom: 3) ,
+                        //color: Colors.grey[200],
                         color: Colors.white,
                         child: Row(
                           children: [
@@ -525,7 +527,7 @@ class _PropertyDetailState extends State<PropertyDetail> {
                             ),
                             Expanded(
                               flex: 2,
-                              child: Text(widget.lang?widget._property.payment:widget._property.payment_ar,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w400),),
+                              child: Text(widget._property.payment,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w400),),
                             ),
 
                           ],
@@ -721,7 +723,7 @@ class _PropertyDetailState extends State<PropertyDetail> {
                 ),
                 Container(
                   margin: EdgeInsets.all(10),
-                  child: Text(widget.lang?widget._property.description:widget._property.description_ar,style: TextStyle(color: Colors.black,fontSize: 15),),
+                  child: Text(widget._property.description,style: TextStyle(color: Colors.black,fontSize: 15),),
                 ),
                 Container(
                   margin: EdgeInsets.all(10),
@@ -729,7 +731,7 @@ class _PropertyDetailState extends State<PropertyDetail> {
                 ),
                 Container(
                   margin: EdgeInsets.all(10),
-                  child: Text(widget.lang?widget._property.agentName:widget._property.agentName_ar,style: TextStyle(color: Colors.black,fontSize: 15),),
+                  child: Text(widget._property.agentName,style: TextStyle(color: Colors.black,fontSize: 15),),
                 ),
                 AdmobBanner(
                   adUnitId: Platform.isAndroid ? androidAdmobBanner : iosAdmobBanner,

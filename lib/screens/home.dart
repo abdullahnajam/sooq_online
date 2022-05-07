@@ -21,6 +21,7 @@ import 'package:propertymarket/values/getters.dart';
 import 'package:propertymarket/values/shared_prefs.dart';
 import 'package:admob_flutter/admob_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../language_selection.dart';
 
@@ -32,7 +33,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
-
+  final PageController _pageController = PageController();
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   String _message = '';
   SharedPref sharedPref=new SharedPref();
@@ -51,6 +52,9 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
   var _countryController=TextEditingController();
   var _cityController=TextEditingController();
 
+  String area="",city="",country="";
+  String areaAR="",cityAR="",countryAR="";
+  String categoryId="";
 
 
 
@@ -63,7 +67,10 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
 
     _areaController.text="${'area'.tr()}";
     _countryController.text="${'country'.tr()}";
-    _countryController.text="${'city'.tr()}";
+    _cityController.text="${'city'.tr()}";
+
+
+
     WidgetsBinding.instance.addObserver(this);
     setStatus(true);
 
@@ -216,7 +223,56 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
     }
   }
 
+  Future<List<List<CategoryModel>>> getHomeCategoryList() async {
+    List<CategoryModel> list=[];
+    List<List<CategoryModel>> pager=[];
+    final databaseReference = FirebaseDatabase.instance.reference();
+    await databaseReference.child("categories").once().then((DataSnapshot dataSnapshot){
+      if(dataSnapshot.value!=null){
+        var KEYS= dataSnapshot.value.keys;
+        var DATA=dataSnapshot.value;
+        for(var individualKey in KEYS) {
+          CategoryModel model = new CategoryModel(
+            individualKey,
+            DATA[individualKey]['name_ar'],
+            DATA[individualKey]['name'],
+            DATA[individualKey]['image'],
+            DATA[individualKey]['time'],
+          );
+          list.add(model);
 
+        }
+      }
+    });
+    list.sort((a, b) {
+      return a.time.compareTo(b.time);
+    });
+
+
+    int pages=list.length~/6;
+    int mod=list.length%6;
+    if(mod>0){
+      pages++;
+    }
+    print("items ${list.length}");
+    for(int i =0 ; i<pages;i++){
+      pager.add([]);
+    }
+    int index=0;
+    for(int i =0 ; i<list.length;i++){
+      if(pager[index].length<6){
+        pager[index].add(list[i]);
+      }
+      else{
+        index++;
+        pager[index].add(list[i]);
+      }
+
+    }
+
+    print("pages ${pager[1].length}");
+    return pager;
+  }
   void handleEvent(AdmobAdEvent event, Map<String, dynamic> args, String adType) {
     switch (event) {
       case AdmobAdEvent.loaded:
@@ -327,7 +383,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
     return Scaffold(
       drawer: MenuDrawer(),
       key: _drawerKey,
-      backgroundColor: Color(0xfff2f8fc),
+      backgroundColor: Color(0xffF5F5F5),
       body: SafeArea(
         child: Column(
           children: [
@@ -336,9 +392,13 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
                 AnimatedContainer(
                   duration: const Duration(seconds: 2),
                   curve: Curves.fastOutSlowIn,
+
                   padding: EdgeInsets.only(top: 10,left: 10,right: 10),
                   decoration: BoxDecoration(
-                      color: primaryColor,
+                    image: DecorationImage(
+                      image: AssetImage("assets/images/bg.png"),
+                      fit: BoxFit.fitWidth
+                    ),
                       borderRadius: BorderRadius.only(
                           bottomLeft: Radius.circular(20),
                           bottomRight: Radius.circular(20)
@@ -381,7 +441,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
                           alignment: Alignment.topLeft,
                           child: InkWell(
                             onTap: _openDrawer,
-                            child: Image.asset("assets/images/profile.png",color: Colors.white,height: 30,),
+                            child: Image.asset("assets/images/profile.png",color: Colors.white,height: 40,),
                           )
                       )
                       /*Align(
@@ -395,12 +455,13 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
                   ),
                 ),
                 slideShowWidget.length>0?Container(
-                    height: MediaQuery.of(context).size.height*0.24,
+
+                    height: MediaQuery.of(context).size.height*0.15,
 
                     margin: EdgeInsets.only(
-                      top: MediaQuery.of(context).size.height*0.1,
-                      left: MediaQuery.of(context).size.width*0.07,
-                      right: MediaQuery.of(context).size.width*0.07,
+                      top: MediaQuery.of(context).size.height*0.18,
+                      left: MediaQuery.of(context).size.width*0.1,
+                      right: MediaQuery.of(context).size.width*0.1,
                     ),
                     child: ImageSlideshow(
 
@@ -508,8 +569,8 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
                       child: Text('selectCategory'.tr(),style: TextStyle(color: Colors.black,fontSize: 20,fontWeight: FontWeight.w700),),
                     ),
                     Expanded(
-                      child: FutureBuilder<List<CategoryModel>>(
-                          future: getCategoryList(),
+                      child: FutureBuilder<List<List<CategoryModel>>>(
+                          future: getHomeCategoryList(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
 
@@ -528,72 +589,118 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
                               }
 
                               else {
-                                return GridView.builder(
-                                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                                        maxCrossAxisExtent: 200,
-                                        childAspectRatio: 3 / 3,
-                                        crossAxisSpacing: 20,
-                                        mainAxisSpacing: 20),
-                                    itemCount: snapshot.data.length,
-                                    itemBuilder: (BuildContext ctx, index) {
-                                      return InkWell(
-                                        onTap: ()async{
-                                          bool hasSubCategories=false;
-                                          final databaseReference = FirebaseDatabase.instance.reference();
-                                          await databaseReference.child("categories").child(snapshot.data[index].id).child("sub_categories").once().then((DataSnapshot dataSnapshot){
-                                            if(dataSnapshot.value!=null){
-                                                hasSubCategories=true;
-                                            }
-                                          });
-                                          if(hasSubCategories){
-                                            Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => SubCategory(snapshot.data[index])));
-                                          }
-                                          else{
-                                            print("no sub categories");
-                                          }
-                                        },
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(10),
-                                              color: Colors.white
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Expanded(
-                                                flex: 7,
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.only(
-                                                        topLeft: Radius.circular(10),
-                                                        topRight: Radius.circular(10),
-                                                      ),
-                                                      image: DecorationImage(
-                                                          image: NetworkImage(snapshot.data[index].image),
-                                                          fit: BoxFit.cover
-                                                      )
-                                                  ),
+                                return Column(
+                                  children: [
+                                    Expanded(
+                                      child: PageView.builder(
+                                        controller: _pageController,
+                                        itemCount: snapshot.data.length,
+                                        itemBuilder: (context, position) {
+                                          return GridView.builder(
+                                              gridDelegate:  SliverGridDelegateWithFixedCrossAxisCount(
 
-                                                ),
+                                                  childAspectRatio: MediaQuery.of(context).size.width / (MediaQuery.of(context).size.height / 1.6),
+                                                  crossAxisSpacing: 20,
+                                                  crossAxisCount: 3,
+                                                  mainAxisSpacing: 20
                                               ),
-                                              Expanded(
-                                                  flex: 3,
-                                                  child:Container(
-                                                    alignment: Alignment.center,
-                                                    child:  Text(context.locale.languageCode=="en"?snapshot.data[index].name:snapshot.data[index].name_ar,style: TextStyle(color: Colors.grey[700],fontWeight: FontWeight.w500),),
-                                                  )
-                                              )
-                                            ],
+                                              itemCount: snapshot.data[position].length,
+                                              itemBuilder: (BuildContext ctx, index) {
+                                                return InkWell(
+                                                  onTap: ()async{
+                                                    bool hasSubCategories=false;
+                                                    final databaseReference = FirebaseDatabase.instance.reference();
+                                                    await databaseReference.child("categories").child(snapshot.data[position][index].id).child("sub_categories").once().then((DataSnapshot dataSnapshot){
+                                                      if(dataSnapshot.value!=null){
+                                                        hasSubCategories=true;
+                                                      }
+                                                    });
 
-                                          ),
-                                        ),
-                                      );
-                                    }
+                                                    if(hasSubCategories){
+                                                      print("city $city , $cityAR");
+                                                      if(country=="" && city=="" && area==""){
+                                                        showAlertDialog(context, 'selectLocation'.tr(), 'pleaseSelectLocation'.tr());
+                                                      }
+                                                      else{
+                                                        Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => SubCategory(snapshot.data[position][index],country,city,area,countryAR,cityAR,areaAR)));
+
+
+                                                      }
+                                                    }
+                                                    else{
+                                                      showAlertDialog(context, 'noSubCategories'.tr(), 'noSubCategoriesFound'.tr());
+                                                    }
+                                                  },
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                        color: Colors.white
+                                                    ),
+                                                    child: Column(
+                                                      children: [
+                                                        Expanded(
+                                                          flex: 6,
+                                                          child: Container(
+                                                            decoration: BoxDecoration(
+                                                                borderRadius: BorderRadius.only(
+                                                                  topLeft: Radius.circular(10),
+                                                                  topRight: Radius.circular(10),
+                                                                ),
+                                                                image: DecorationImage(
+                                                                    image: NetworkImage(snapshot.data[position][index].image),
+                                                                    fit: BoxFit.cover
+                                                                )
+                                                            ),
+
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                            flex: 4,
+                                                            child:Padding(
+                                                              padding: const EdgeInsets.all(8.0),
+                                                              child: Row(
+                                                                children: [
+                                                                  Expanded(
+                                                                    child: Container(
+                                                                      child:  Text(context.locale.languageCode=="en"?snapshot.data[position][index].name:snapshot.data[position][index].name_ar,style: TextStyle(color: Colors.grey[700],fontWeight: FontWeight.w500,fontSize: 11),),
+                                                                    ),
+                                                                  ),
+                                                                  CircleAvatar(
+                                                                    backgroundColor: Colors.grey[700],
+                                                                    radius: 10,
+                                                                    child: Icon(Icons.arrow_forward,color: Colors.white,size: 10,),
+                                                                  )
+                                                                ],
+                                                              ),
+                                                            )
+                                                        )
+                                                      ],
+
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    Container(
+                                      margin: EdgeInsets.all(10),
+                                      child: SmoothPageIndicator(
+                                          controller: _pageController,  // PageController
+                                          count:  snapshot.data.length,
+                                          effect:  WormEffect(dotHeight: 10,dotWidth: 10),  // your preferred effect
+
+                                      ),
+                                    )
+                                  ],
                                 );
                               }
                             }
                           }
                       ),
                     ),
+
 
                   ],
                 ),
@@ -868,7 +975,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
                             alignment: Alignment.center,
                             child: Container(
                               margin: EdgeInsets.only(top: 20,),
-                              child: Text('search'.tr(),textAlign: TextAlign.center,style: TextStyle(fontWeight: FontWeight.w400,fontSize: 18)),
+                              child: Text('searchDialogHeadline'.tr(),textAlign: TextAlign.center,style: TextStyle(fontWeight: FontWeight.w400,fontSize: 18)),
                             ),
                           ),
                           Align(
@@ -972,8 +1079,8 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
 
                                                                               !value?_selectedCountryName=snapshot.data[index].name_ar:_selectedCountryName=snapshot.data[index].name;
                                                                               //!value?_countryController.text=;
-                                                                              engCountry=snapshot.data[index].name;
-                                                                              arCountry=snapshot.data[index].name_ar;
+                                                                              country=snapshot.data[index].name;
+                                                                              countryAR=snapshot.data[index].name_ar;
                                                                               selectedCountryId=snapshot.data[index].id;
                                                                             });
                                                                             countryController(!value?snapshot.data[index].name_ar:snapshot.data[index].name);
@@ -1136,8 +1243,8 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
                                                                               setState(() {
                                                                                 !value?_selectedCityName=snapshot.data[index].name_ar:_selectedCityName=snapshot.data[index].name;
                                                                                // !value?_cityController.text=snapshot.data[index].name_ar:_selectedCityName=snapshot.data[index].name;
-                                                                                engCity=snapshot.data[index].name;
-                                                                                arCity=snapshot.data[index].name_ar;
+                                                                                city=snapshot.data[index].name;
+                                                                                cityAR=snapshot.data[index].name_ar;
                                                                                 selectedCityId=snapshot.data[index].id;
                                                                               });
                                                                               cityController(!value?snapshot.data[index].name_ar:snapshot.data[index].name);
@@ -1304,8 +1411,8 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
                                                                                 setState(() {
                                                                                   !value?_selectedAreaName=snapshot.data[index].name_ar:_selectedAreaName=snapshot.data[index].name;
                                                                                   //!value?_areaController.text=snapshot.data[index].name_ar:_selectedAreaName=snapshot.data[index].name;
-                                                                                  engArea=snapshot.data[index].name;
-                                                                                  arArea=snapshot.data[index].name_ar;
+                                                                                  area=snapshot.data[index].name;
+                                                                                  areaAR=snapshot.data[index].name_ar;
                                                                                   selectedAreaId=snapshot.data[index].id;
                                                                                 });
                                                                                 areaController(!value?snapshot.data[index].name_ar:snapshot.data[index].name);
@@ -1394,376 +1501,6 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
 
                               SizedBox(height: 15,),
 
-                              /*Text('selectCategory'.tr(),style: TextStyle(fontWeight: FontWeight.w600,color: Colors.grey[600])),
-                              SizedBox(height: 7,),
-                              Row(
-                                children: [
-                                  Image.asset("assets/images/country.png",width: 30,height: 30,),
-                                  SizedBox(width: 10,),
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: ()=>sharedPref.getPref().then((value){
-                                        return showDialog<void>(
-                                          context: context,
-                                          barrierDismissible: true, // user must tap button!
-                                          builder: (BuildContext context) {
-                                            return Dialog(
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: const BorderRadius.all(
-                                                  Radius.circular(10.0),
-                                                ),
-                                              ),
-                                              insetAnimationDuration: const Duration(seconds: 1),
-                                              insetAnimationCurve: Curves.fastOutSlowIn,
-                                              elevation: 2,
-                                              child: Container(
-                                                height: MediaQuery.of(context).size.height * 0.4,
-                                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
-                                                child: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Stack(
-                                                      children: [
-                                                        Align(
-                                                          alignment: Alignment.center,
-                                                          child: Container(
-                                                            margin: EdgeInsets.all(10),
-                                                            child: Text(
-                                                              'categorySelect'.tr(),
-                                                              textAlign: TextAlign.center,
-                                                              style: TextStyle(
-                                                                  fontSize: 25,
-                                                                  color: Colors.black,
-                                                                  fontWeight: FontWeight.w600),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Align(
-                                                          alignment: Alignment.centerRight,
-                                                          child: Container(
-                                                            margin: EdgeInsets.all(10),
-                                                            child: IconButton(
-                                                              icon: Icon(
-                                                                Icons.close,
-                                                                color: Colors.grey,
-                                                              ),
-                                                              onPressed: () => Navigator.pop(context),
-                                                            ),
-                                                          ),
-                                                        )
-                                                      ],
-                                                    ),
-                                                    Expanded(
-                                                      child: FutureBuilder<List<CategoryModel>>(
-                                                        future: getCategoryList(),
-                                                        builder: (context, snapshot) {
-                                                          if (snapshot.hasData) {
-                                                            if (snapshot.data != null && snapshot.data.length > 0) {
-                                                              return Container(
-                                                                  margin: EdgeInsets.all(10),
-                                                                  child: Scrollbar(
-                                                                    controller: _scrollController,
-                                                                    isAlwaysShown:
-                                                                    snapshot.data.length > 3 ? true : false,
-                                                                    child: ListView.separated(
-                                                                      controller: _scrollController,
-                                                                      separatorBuilder: (context, index) {
-                                                                        return Divider(
-                                                                          color: Colors.grey,
-                                                                        );
-                                                                      },
-                                                                      shrinkWrap: true,
-                                                                      itemCount: snapshot.data.length,
-                                                                      itemBuilder:
-                                                                          (BuildContext context, int index) {
-                                                                        return GestureDetector(
-                                                                          onTap: () {
-                                                                            setState(() {
-                                                                              !value?_selectedCategoryName=snapshot.data[index].name_ar:_selectedCategoryName=snapshot.data[index].name;
-                                                                              arCategory = snapshot.data[index].name_ar ;
-                                                                              engCategory = snapshot.data[index].name ;
-                                                                              selectedCategoryId = snapshot.data[index].id;
-                                                                            });
-
-                                                                            Navigator.pop(context);
-                                                                          },
-                                                                          child: Container(
-                                                                            margin: EdgeInsets.all(5),
-                                                                            child: Text(
-                                                                              !value
-                                                                                  ? snapshot.data[index].name_ar
-                                                                                  : snapshot.data[index].name,
-                                                                              textAlign: TextAlign.center,
-                                                                              style: TextStyle(
-                                                                                  fontSize: 16,
-                                                                                  color: Colors.black),
-                                                                            ),
-                                                                          ),
-                                                                        );
-                                                                      },
-                                                                    ),
-                                                                  ));
-                                                            } else {
-                                                              return Column(
-                                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                                children: [
-                                                                  Container(
-                                                                    child: Lottie.asset(
-                                                                      'assets/json/empty.json',
-                                                                      width:
-                                                                      MediaQuery.of(context).size.width * 0.4,
-                                                                      height:
-                                                                      MediaQuery.of(context).size.height * 0.2,
-                                                                      fit: BoxFit.fill,
-                                                                    ),
-                                                                  ),
-                                                                  SizedBox(
-                                                                    height: 10,
-                                                                  ),
-                                                                  Container(
-                                                                      child: Text(
-                                                                        'noData'.tr(),
-                                                                        style: TextStyle(fontSize: 16),
-                                                                      )),
-                                                                ],
-                                                              );
-                                                            }
-                                                          } else if (snapshot.hasError) {
-                                                            return Text('Error : ${snapshot.error}');
-                                                          } else {
-                                                            return new Center(
-                                                              child: CircularProgressIndicator(),
-                                                            );
-                                                          }
-                                                        },
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 15,
-                                                    )
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        );
-                                      }),
-                                      child: Container(
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                            border: Border.all(color: Colors.blue[200]),
-                                            borderRadius: BorderRadius.circular(7)
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Container(
-                                                padding: EdgeInsets.only(left: 10,right: 10),
-                                                child: Text(_selectedCategoryName,style: TextStyle(color: Colors.grey[600]),),
-
-                                              ),
-                                            ),
-                                            Icon(Icons.keyboard_arrow_down,color: Colors.blue,)
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              ),
-
-                              SizedBox(height: 15,),
-
-                              Text('selectSubCategory'.tr(),style: TextStyle(fontWeight: FontWeight.w600,color: Colors.grey[600])),
-                              SizedBox(height: 7,),
-                              Row(
-                                children: [
-                                  Image.asset("assets/images/city.png",width: 30,height: 30,),
-                                  SizedBox(width: 10,),
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: (){
-                                        if(selectedCategoryId!=null){
-                                          sharedPref.getPref().then((value){
-                                            return showDialog<void>(
-                                              context: context,
-                                              barrierDismissible: true, // user must tap button!
-                                              builder: (BuildContext context) {
-                                                return Dialog(
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: const BorderRadius.all(
-                                                      Radius.circular(10.0),
-                                                    ),
-                                                  ),
-                                                  insetAnimationDuration: const Duration(seconds: 1),
-                                                  insetAnimationCurve: Curves.fastOutSlowIn,
-                                                  elevation: 2,
-                                                  child: Container(
-                                                    height: MediaQuery.of(context).size.height * 0.4,
-                                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
-                                                    child: Column(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        Stack(
-                                                          children: [
-                                                            Align(
-                                                              alignment: Alignment.center,
-                                                              child: Container(
-                                                                margin: EdgeInsets.all(10),
-                                                                child: Text(
-                                                                  'SubCategorySelect'.tr(),
-                                                                  textAlign: TextAlign.center,
-                                                                  style: TextStyle(
-                                                                      fontSize: 25,
-                                                                      color: Colors.black,
-                                                                      fontWeight: FontWeight.w600),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Align(
-                                                              alignment: Alignment.centerRight,
-                                                              child: Container(
-                                                                margin: EdgeInsets.all(10),
-                                                                child: IconButton(
-                                                                  icon: Icon(
-                                                                    Icons.close,
-                                                                    color: Colors.grey,
-                                                                  ),
-                                                                  onPressed: () => Navigator.pop(context),
-                                                                ),
-                                                              ),
-                                                            )
-                                                          ],
-                                                        ),
-                                                        Expanded(
-                                                          child: FutureBuilder<List<CategoryModel>>(
-                                                            future: getSubCategoryList(selectedCategoryId),
-                                                            builder: (context, snapshot) {
-                                                              if (snapshot.hasData) {
-                                                                if (snapshot.data != null && snapshot.data.length > 0) {
-                                                                  return Container(
-                                                                      margin: EdgeInsets.all(10),
-                                                                      child: Scrollbar(
-                                                                        controller: _scrollController,
-                                                                        isAlwaysShown:
-                                                                        snapshot.data.length > 3 ? true : false,
-                                                                        child: ListView.separated(
-                                                                          controller: _scrollController,
-                                                                          separatorBuilder: (context, index) {
-                                                                            return Divider(
-                                                                              color: Colors.grey,
-                                                                            );
-                                                                          },
-                                                                          shrinkWrap: true,
-                                                                          itemCount: snapshot.data.length,
-                                                                          itemBuilder:
-                                                                              (BuildContext context, int index) {
-                                                                            return GestureDetector(
-                                                                              onTap: () {
-                                                                                setState(() {
-                                                                                  !value
-                                                                                      ?  _selectedSubCategoryName = snapshot.data[index].name_ar
-                                                                                      : _selectedSubCategoryName = snapshot.data[index].name ;
-
-                                                                                  arSubCategory = snapshot.data[index].name_ar ;
-                                                                                  engSubCategory = snapshot.data[index].name ;
-                                                                                  selectedSubCategoryId = snapshot.data[index].id;
-                                                                                });
-                                                                                Navigator.pop(context);
-                                                                              },
-                                                                              child: Container(
-                                                                                margin: EdgeInsets.all(5),
-                                                                                child: Text(
-                                                                                  !value
-                                                                                      ? snapshot.data[index].name_ar
-                                                                                      : snapshot.data[index].name,
-                                                                                  textAlign: TextAlign.center,
-                                                                                  style: TextStyle(
-                                                                                      fontSize: 16,
-                                                                                      color: Colors.black),
-                                                                                ),
-                                                                              ),
-                                                                            );
-                                                                          },
-                                                                        ),
-                                                                      ));
-                                                                } else {
-                                                                  return Column(
-                                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                                    children: [
-                                                                      Container(
-                                                                        child: Lottie.asset(
-                                                                          'assets/json/empty.json',
-                                                                          width:
-                                                                          MediaQuery.of(context).size.width * 0.4,
-                                                                          height:
-                                                                          MediaQuery.of(context).size.height * 0.2,
-                                                                          fit: BoxFit.fill,
-                                                                        ),
-                                                                      ),
-                                                                      SizedBox(
-                                                                        height: 10,
-                                                                      ),
-                                                                      Container(
-                                                                          child: Text(
-                                                                            'noData'.tr(),
-                                                                            style: TextStyle(fontSize: 16),
-                                                                          )),
-                                                                    ],
-                                                                  );
-                                                                }
-                                                              } else if (snapshot.hasError) {
-                                                                return Text('Error : ${snapshot.error}');
-                                                              } else {
-                                                                return new Center(
-                                                                  child: CircularProgressIndicator(),
-                                                                );
-                                                              }
-                                                            },
-                                                          ),
-                                                        ),
-                                                        SizedBox(
-                                                          height: 15,
-                                                        )
-                                                      ],
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                          });
-                                        }
-                                        else{
-                                          //Toast.show("Please select above", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
-                                        }
-                                      },
-                                      child: Container(
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                            border: Border.all(color: Colors.blue[200]),
-                                            borderRadius: BorderRadius.circular(7)
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Container(
-                                                padding: EdgeInsets.only(left: 10,right: 10),
-                                                child: Text(_selectedSubCategoryName,style: TextStyle(color: Colors.grey[600]),),
-
-                                              ),
-                                            ),
-                                            Icon(Icons.keyboard_arrow_down,color: Colors.blue,)
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              ),
-*/
-
 
 
 
@@ -1775,6 +1512,10 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
 
                       InkWell(
                         onTap: ()async{
+                          if(_formKey.currentState.validate()){
+                            Navigator.pop(context);
+                          }
+
                          /* interstitialAd.show();
                           if (await interstitialAd.isLoaded) {
                                   interstitialAd.show();
@@ -1791,7 +1532,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
                                 }*/
 
 
-                          Navigator.pop(context);
+
                         },
                         child: Container(
                           alignment: Alignment.center,
@@ -1816,7 +1557,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver {
                                 ],
                               )*/
                           ),
-                          child: Text('search'.tr(),textAlign: TextAlign.center,style: TextStyle(color: Colors.white,fontWeight: FontWeight.w600,fontSize: 20),),
+                          child: Text('searchIn'.tr(),textAlign: TextAlign.center,style: TextStyle(color: Colors.white,fontWeight: FontWeight.w600,fontSize: 20),),
                         ),
                       ),
 

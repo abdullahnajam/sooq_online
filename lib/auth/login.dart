@@ -228,7 +228,7 @@ class _LoginState extends State<Login> {
                     height: 20,
                   ),
 
-                  Container(
+                  /*Container(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -237,7 +237,7 @@ class _LoginState extends State<Login> {
 
                       ],
                     ),
-                  ),
+                  ),*/
                 ],
               ),
             ),

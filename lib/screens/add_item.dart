@@ -113,7 +113,6 @@ class _AddItemState extends State<AddItem> {
   final _scrollController = ScrollController();
 
   final enpriceController=TextEditingController();
-  final arpriceController=TextEditingController();
   final numpriceController=TextEditingController();
   final wordPriceController=TextEditingController();
   final phoneController=TextEditingController();
@@ -136,11 +135,8 @@ class _AddItemState extends State<AddItem> {
   //arabic text field
 
 
-  final arwordPriceController=TextEditingController();
   final arSubCategoryController=TextEditingController();
-  final ardescriptionController=TextEditingController();
-  final arpaymentController=TextEditingController();
-  final aragentNameController=TextEditingController();
+
 
   String selectedCountryId="";
   String selectedCategoryId="";
@@ -744,7 +740,7 @@ class _AddItemState extends State<AddItem> {
                                           engCategory = snapshot.data[index].name ;
                                           selectedCategoryId = snapshot.data[index].id;
                                         });
-                                        getAttributes(context.locale.languageCode);
+
                                         Navigator.pop(context);
                                       },
                                       child: Container(
@@ -894,6 +890,7 @@ class _AddItemState extends State<AddItem> {
                                           engSubCategory = snapshot.data[index].name ;
                                           selectedSubCategoryId = snapshot.data[index].id;
                                         });
+                                        getAttributes(context.locale.languageCode);
                                         Navigator.pop(context);
                                       },
                                       child: Container(
@@ -958,7 +955,7 @@ class _AddItemState extends State<AddItem> {
     );
   }
 
-  Future<void> _showValueDialog(bool val,int index,String title,String id) async {
+  Future<void> _showValueDialog(bool val,int i,String title,String id) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: true, // user must tap button!
@@ -1011,7 +1008,7 @@ class _AddItemState extends State<AddItem> {
                 ),
                 Expanded(
                   child: FutureBuilder<List<LocationModel>>(
-                    future: getValueList(id,selectedCategoryId),
+                    future: getValueList(id,selectedCategoryId,selectedSubCategoryId),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         if (snapshot.data != null && snapshot.data.length > 0) {
@@ -1030,14 +1027,13 @@ class _AddItemState extends State<AddItem> {
                                   },
                                   shrinkWrap: true,
                                   itemCount: snapshot.data.length,
-                                  itemBuilder:
-                                      (BuildContext context, int index) {
+                                  itemBuilder: (BuildContext context, int index) {
                                     return GestureDetector(
                                       onTap: () {
                                         setState(() {
                                           !val
-                                              ?  attributeValueController[index].text  = snapshot.data[index].name_ar
-                                              : attributeValueController[index].text = snapshot.data[index].name ;
+                                              ?  attributeValueController[i].text  = snapshot.data[index].name_ar
+                                              : attributeValueController[i].text = snapshot.data[index].name ;
 
                                           LocationModel model=LocationModel(
                                             snapshot.data[index].id,
@@ -1045,7 +1041,7 @@ class _AddItemState extends State<AddItem> {
                                               snapshot.data[index].name_ar,
                                               snapshot.data[index].time,
                                           );
-                                          attributes[index].selectedValue = model;
+                                          attributes[i].selectedValue = model;
                                         });
                                         Navigator.pop(context);
                                       },
@@ -1133,7 +1129,7 @@ class _AddItemState extends State<AddItem> {
       'subcategory': engSubCategory,
       'categoryAr': arCategory,
       'subcategoryAr': arSubCategory,
-      'price_ar': arpriceController.text,
+      'price_ar': "",
       'price_en': enpriceController.text,
       'numericalPrice': int.parse(numpriceController.text),
       'call': phoneController.text,
@@ -1152,10 +1148,8 @@ class _AddItemState extends State<AddItem> {
       'sponsered': isSponsered,
       'best': best,
       'serial': snoController.text,
-      'description_ar': ardescriptionController.text,
-      'name_ar': arwordPriceController.text,
-      'agentName_ar': aragentNameController.text,
-      'payment_ar': arpaymentController.text,
+      'description_ar': "",
+      'agentName_ar': "",
       'city_ar': selectedCityAR,
       'country_ar': selectedCountryAR,
       'area_ar': selectedAreaAR,
@@ -1181,13 +1175,11 @@ class _AddItemState extends State<AddItem> {
 
         if (await interstitialAd.isLoaded) {
           interstitialAd.show();
-          Navigator.pushReplacement(context, new MaterialPageRoute(
-              builder: (context) => BottomBar(5)));
+          Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => BottomBar(5)));
           Toast.show("Submitted", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
         }
         else {
-          Navigator.pushReplacement(context, new MaterialPageRoute(
-              builder: (context) => BottomBar(5)));
+          Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => BottomBar(5)));
           Toast.show("Submitted", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
         }
       }
@@ -1307,11 +1299,12 @@ class _AddItemState extends State<AddItem> {
   Future getAttributes(String language) async {
     attributes=[];
     attributeValueController=[];
+    rows=[];
     setState(() {
       attributeLoaded=false;
     });
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("categories").child(selectedCategoryId).child("attribute").once().then((DataSnapshot dataSnapshot){
+    await databaseReference.child("categories").child(selectedCategoryId).child("sub_categories").child(selectedSubCategoryId).child("attribute").once().then((DataSnapshot dataSnapshot){
       if(dataSnapshot.value!=null){
         var KEYS= dataSnapshot.value.keys;
         var DATA=dataSnapshot.value;
@@ -1356,13 +1349,11 @@ class _AddItemState extends State<AddItem> {
                 maxLines: 1,
                 readOnly: true,
                 onTap: (){
-                  bool val=language=="en"?true:false;
                   _showValueDialog(
-                      val,
+                      language=="en"?true:false,
                       i,
                       language=="en"?attributes[i].attribute.name:attributes[i].attribute.name_ar,
                       attributes[i].attribute.id,
-
                   );
                 },
                 controller: attributeValueController[i],
@@ -1500,20 +1491,7 @@ class _AddItemState extends State<AddItem> {
                         ),
                         Column(
                           children: [
-                            Container(
-                              child: TextFormField(
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter some text';
-                                  }
-                                  return null;
-                                },
-                                maxLines: 1,
-                                controller: arwordPriceController,
-                                decoration: InputDecoration(hintText:'enterNameA'.tr(),contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
-                              ),
-                            ),
-                            Divider(color: Colors.grey[600],),
+
                             Container(
                               child: TextFormField(
                                 validator: (value) {
@@ -1527,6 +1505,7 @@ class _AddItemState extends State<AddItem> {
                                 decoration: InputDecoration(hintText:'enterNameE'.tr(),contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
                               ),
                             ),
+
 
                           ],
                         )
@@ -1551,26 +1530,11 @@ class _AddItemState extends State<AddItem> {
                                   return null;
                                 },
                                 controller:enpriceController,
-                                keyboardType: TextInputType.number,
                                 maxLines: 1,
                                 decoration: InputDecoration(hintText:'priceE'.tr(),contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
                               ),
                             ),
-                            Divider(color: Colors.grey[600],),
-                            Container(
-                              child: TextFormField(
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter some text';
-                                  }
-                                  return null;
-                                },
-                                controller:arpriceController,
-                                keyboardType: TextInputType.number,
-                                maxLines: 1,
-                                decoration: InputDecoration(hintText:'priceA'.tr(),contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
-                              ),
-                            ),
+
                             Divider(color: Colors.grey[600],),
                             Container(
                               child: TextFormField(
@@ -1637,20 +1601,7 @@ class _AddItemState extends State<AddItem> {
                                 decoration: InputDecoration(hintText:'descriptionE'.tr(),contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
                               ),
                             ),
-                            Divider(color: Colors.grey[600],),
-                            Container(
-                              child: TextFormField(
-                                maxLines: 3,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter some text';
-                                  }
-                                  return null;
-                                },
-                                controller: ardescriptionController,
-                                decoration: InputDecoration(hintText:'descriptionA'.tr(),contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
-                              ),
-                            ),
+
 
                           ],
                         )
@@ -1724,21 +1675,7 @@ class _AddItemState extends State<AddItem> {
                                 decoration: InputDecoration(hintText:"enterAgentNameE".tr(),contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
                               ),
                             ),
-                            Divider(color: Colors.grey[600],),
-                            Container(
-                              child: TextFormField(
-                                maxLines: 1,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter some text';
-                                  }
-                                  return null;
-                                },
-                                controller: aragentNameController,
 
-                                decoration: InputDecoration(hintText:"enterAgentNameA".tr(),contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
-                              ),
-                            ),
 
                           ],
                         )
@@ -1895,21 +1832,7 @@ class _AddItemState extends State<AddItem> {
                                 decoration: InputDecoration(hintText:'enterPaymentTypeE'.tr(),contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
                               ),
                             ),
-                            Divider(color: Colors.grey[600],),
-                            Container(
-                              child: TextFormField(
-                                maxLines: 1,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter some text';
-                                  }
-                                  return null;
-                                },
-                                controller: arpaymentController,
 
-                                decoration: InputDecoration(hintText:'enterPaymentTypeA'.tr(),contentPadding: EdgeInsets.only(left: 10), border: InputBorder.none,),
-                              ),
-                            ),
 
                           ],
                         )

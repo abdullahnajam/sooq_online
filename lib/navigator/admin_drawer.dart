@@ -451,7 +451,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
               //_changePasswordDailog();
               final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
               await firebaseAuth
-                  .sendPasswordResetEmail(email: "propertymarket1@gmail.com")
+                  .sendPasswordResetEmail(email: "sooqonlineapp@gmail.com")
                   .whenComplete(() {
                 final databaseReference = FirebaseDatabase.instance.reference();
                 databaseReference.child("admin").set({

@@ -1724,7 +1724,7 @@ class _NotifyState extends State<Notify> {
 
   getPropertyList() async {
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("property").orderByChild("status").equalTo("approved").once().then((DataSnapshot dataSnapshot) async {
+    await databaseReference.child("item").orderByChild("status").equalTo("approved").once().then((DataSnapshot dataSnapshot) async {
       if(dataSnapshot.value!=null){
         var KEYS= dataSnapshot.value.keys;
         var DATA=dataSnapshot.value;

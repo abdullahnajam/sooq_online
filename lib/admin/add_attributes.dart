@@ -10,9 +10,9 @@ import 'package:propertymarket/navigator/admin_drawer.dart';
 import 'package:propertymarket/values/constants.dart';
 import 'package:toast/toast.dart';
 class AddAttributes extends StatefulWidget {
-  String id;
+  String id,sid;
 
-  AddAttributes(this.id);
+  AddAttributes(this.id,this.sid);
 
   @override
   _AddAttributesState createState() => _AddAttributesState();
@@ -21,7 +21,7 @@ class AddAttributes extends StatefulWidget {
 class _AddAttributesState extends State<AddAttributes> {
   submitData(){
     final databaseReference = FirebaseDatabase.instance.reference();
-    databaseReference.child("categories").child(widget.id).child("attribute").push().set({
+    databaseReference.child("categories").child(widget.id).child("sub_categories").child(widget.sid).child("attribute").push().set({
       'name': _controller.text,
       'name_ar': _arcontroller.text,
       'time':DateTime.now().millisecondsSinceEpoch
@@ -29,7 +29,7 @@ class _AddAttributesState extends State<AddAttributes> {
 
     }).then((value) {
       Toast.show("Submitted", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => AddAttributes(widget.id)));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => AddAttributes(widget.id,widget.sid)));
 
 
     }).catchError((onError){
@@ -40,7 +40,7 @@ class _AddAttributesState extends State<AddAttributes> {
   Future<List<PropertyType>> getSlideList() async {
     List<PropertyType> list=new List();
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("categories").child(widget.id).child("attribute").once().then((DataSnapshot dataSnapshot){
+    await databaseReference.child("categories").child(widget.id).child("sub_categories").child(widget.sid).child("attribute").once().then((DataSnapshot dataSnapshot){
 
       if(dataSnapshot.value!=null){
         var KEYS= dataSnapshot.value.keys;
@@ -203,9 +203,9 @@ class _AddAttributesState extends State<AddAttributes> {
                                               child: RaisedButton(
                                                 onPressed: ()async{
                                                   final databaseReference = FirebaseDatabase.instance.reference();
-                                                  await databaseReference.child("categories").child(widget.id).child("attribute").child(snapshot.data[index].id).remove().then((value) {
+                                                  await databaseReference.child("categories").child(widget.id).child("sub_categories").child(widget.sid).child("attribute").child(snapshot.data[index].id).remove().then((value) {
                                                     Navigator.pushReplacement(
-                                                        context, MaterialPageRoute(builder: (BuildContext context) => AddAttributes(widget.id)));
+                                                        context, MaterialPageRoute(builder: (BuildContext context) => AddAttributes(widget.id,widget.sid)));
                                                   });
                                                 },
                                                 color: Colors.red,
@@ -219,7 +219,7 @@ class _AddAttributesState extends State<AddAttributes> {
                                               child: RaisedButton(
                                                 onPressed: (){
                                                   Navigator.pushReplacement(
-                                                      context, MaterialPageRoute(builder: (BuildContext context) => AddValues(widget.id,snapshot.data[index].id)));
+                                                      context, MaterialPageRoute(builder: (BuildContext context) => AddValues(widget.id,snapshot.data[index].id,widget.sid)));
                                                 },
                                                 color: primaryColor,
                                                 child: Text("View Values",style: TextStyle(color: Colors.white),),

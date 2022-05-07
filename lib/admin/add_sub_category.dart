@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:progress_dialog/progress_dialog.dart';
+import 'package:propertymarket/admin/add_attributes.dart';
 import 'package:propertymarket/admin/view_cities.dart';
 import 'package:propertymarket/model/category_model.dart';
 import 'package:propertymarket/model/slideshow.dart';
@@ -309,29 +310,29 @@ class _AddSubCategoryState extends State<AddSubCategory> {
                                   title: Text(snapshot.data[index].name),
                                   subtitle: Text(snapshot.data[index].name_ar),
                                   trailing: PopupMenuButton(
+                                    onSelected: (result)async{
+                                      if (result == 0) {
+                                        Navigator.of(context)
+                                            .push(MaterialPageRoute(builder: (context) => AddAttributes(widget.id,snapshot.data[index].id)));
+                                      }
+                                      else if (result == 1) {
+                                        final databaseReference = FirebaseDatabase.instance.reference();
+                                        await databaseReference.child("categories").child(widget.id).child("sub_categories").child(snapshot.data[index].id).remove().then((value) {
+                                          Navigator.pushReplacement(
+                                              context, MaterialPageRoute(builder: (BuildContext context) => AddSubCategory(widget.id)));
+                                        });
+                                      }
+                                    },
                                     icon: Icon(Icons.more_vert),
                                     itemBuilder: (BuildContext context) => <PopupMenuEntry>[
 
                                       PopupMenuItem(
-                                        onTap: ()async{
-
-                                        },
+                                        value: 0,
                                         child: Text("Attributes"),
                                       ),
-                                      PopupMenuItem(
-                                        onTap: ()async{
 
-                                        },
-                                        child: Text("Sub Categories"),
-                                      ),
                                       PopupMenuItem(
-                                        onTap: ()async{
-                                          final databaseReference = FirebaseDatabase.instance.reference();
-                                          await databaseReference.child("categories").child(widget.id).child("sub_categories").child(snapshot.data[index].id).remove().then((value) {
-                                            Navigator.pushReplacement(
-                                                context, MaterialPageRoute(builder: (BuildContext context) => AddSubCategory(widget.id)));
-                                          });
-                                        },
+                                        value: 1,
                                         child: Text("Delete"),
                                       ),
 

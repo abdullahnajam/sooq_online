@@ -9,16 +9,97 @@ import 'package:flutter/material.dart';
 import 'package:propertymarket/model/category_model.dart';
 import 'package:propertymarket/screens/property_list.dart';
 
-class SubCategory extends StatefulWidget {
-  CategoryModel categoryModel;
+import '../values/constants.dart';
 
-  SubCategory(this.categoryModel);
+class SubCategory extends StatefulWidget {
+
+  CategoryModel categoryModel;
+  String country,city,area;
+  String countryAr,cityAr,areaAr;
+
+
+  SubCategory(this.categoryModel, this.country, this.city, this.area,
+      this.countryAr, this.cityAr, this.areaAr);
 
   @override
   _SubCategoryState createState() => _SubCategoryState();
 }
 
 class _SubCategoryState extends State<SubCategory> {
+
+  AdmobBannerSize bannerSize;
+  AdmobBannerSize smallBannerSize;
+  AdmobInterstitial interstitialAd;
+  bool isAdmobLoadedForBanner=true;
+  bool isAdmobLoadedForInterstitial=true;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Admob.requestTrackingAuthorization();
+    bannerSize = AdmobBannerSize.LARGE_BANNER;
+    smallBannerSize= AdmobBannerSize.BANNER;
+
+    interstitialAd = AdmobInterstitial(
+      adUnitId: Platform.isAndroid ? androidInterstitialVideo : iosAdmobInterstitialVideo,
+      listener: (AdmobAdEvent event, Map<String, dynamic> args) {
+        if (event == AdmobAdEvent.closed) interstitialAd.load();
+        handleEvent(event, args, 'Interstitial');
+      },
+    );
+    interstitialAd.load();
+
+  }
+  void handleEvent(AdmobAdEvent event, Map<String, dynamic> args, String adType) {
+    switch (event) {
+      case AdmobAdEvent.loaded:
+        print('New Admob $adType Ad loaded!');
+        break;
+      case AdmobAdEvent.opened:
+        print('Admob $adType Ad opened!');
+        break;
+      case AdmobAdEvent.closed:
+        print('Admob $adType Ad closed!');
+        break;
+      case AdmobAdEvent.failedToLoad:
+        if(adType=="Banner"){
+          setState(() {
+            isAdmobLoadedForBanner=false;
+          });
+        }
+        if(adType=="Interstitial"){
+          setState(() {
+            isAdmobLoadedForBanner=false;
+          });
+        }
+        print('Admob $adType failed to load. :(');
+        break;
+      case AdmobAdEvent.rewarded:
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return WillPopScope(
+              child: AlertDialog(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text('Reward callback fired. Thanks Andrew!'),
+                    Text('Type: ${args['type']}'),
+                    Text('Amount: ${args['amount']}'),
+                  ],
+                ),
+              ),
+              onWillPop: () async {
+                print("snack bar popped");
+                return true;
+              },
+            );
+          },
+        );
+        break;
+      default:
+    }
+  }
 
   Future<List<CategoryModel>> getCategoryList() async {
     List<CategoryModel> list=[];
@@ -48,7 +129,7 @@ class _SubCategoryState extends State<SubCategory> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xfff2f8fc),
+      backgroundColor: Color(0xffF5F5F5),
       body: SafeArea(
           child: Stack(
             children: [
@@ -93,7 +174,8 @@ class _SubCategoryState extends State<SubCategory> {
                               itemBuilder: (BuildContext context,int index){
                                 return InkWell(
                                   onTap: ()async{
-                                    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => PropertyList("","","","",snapshot.data[index].name,"","","","","",)));
+                                    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => PropertyList(widget.country,widget.city,widget.area,widget.categoryModel.name,snapshot.data[index].name,widget.countryAr,widget.cityAr,widget.areaAr,widget.categoryModel.name_ar,snapshot.data[index].name_ar,widget.categoryModel.id,snapshot.data[index].id)));
+
                                   },
                                   child: Card(
                                     shape: RoundedRectangleBorder(
@@ -164,6 +246,15 @@ class _SubCategoryState extends State<SubCategory> {
                         }
                       },
                     ),
+                  ),
+                  AdmobBanner(
+                    adUnitId: Platform.isAndroid ? androidAdmobBanner : iosAdmobBanner,
+                    adSize: bannerSize,
+                    listener: (AdmobAdEvent event,
+                        Map<String, dynamic> args) {
+                      handleEvent(event, args, 'Banner');
+                    }, onBannerCreated: (AdmobBannerController controller) {
+                  },
                   )
                 ],
               ),

@@ -158,7 +158,7 @@ class _AdminSearchListState extends State<AdminSearchList> with WidgetsBindingOb
   void _getNames() async {
     List<Item> tempList = new List();
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("item").orderByChild("status").equalTo("approved").once().then((DataSnapshot dataSnapshot){
+    await databaseReference.child("item").once().then((DataSnapshot dataSnapshot){
 
       if(dataSnapshot.value!=null){
         var KEYS= dataSnapshot.value.keys;
@@ -185,9 +185,7 @@ class _AdminSearchListState extends State<AdminSearchList> with WidgetsBindingOb
             DATA[individualKey]['agentName'],
             DATA[individualKey]['serial'],
             DATA[individualKey]['description_ar'],
-            DATA[individualKey]['name_ar'],
             DATA[individualKey]['agentName_ar'],
-            DATA[individualKey]['payment_ar'],
             DATA[individualKey]['city_ar'],
             DATA[individualKey]['country_ar'],
             DATA[individualKey]['area_ar'],

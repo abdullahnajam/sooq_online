@@ -57,7 +57,7 @@ class _MyAddsState extends State<MyAdds> {
             backgroundColor: primaryColor,
             title: Text("myAdds".tr()),
           ),
-          backgroundColor: Color(0xfff2f8fc),
+          backgroundColor: Color(0xffF5F5F5),
           body: Container(
             child: Column(
               children: [
@@ -286,7 +286,7 @@ class _MyAddsState extends State<MyAdds> {
   Future<List<Property>> getPropertyListApproved() async {
     List<Property> list=[];
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("property").orderByChild("status").equalTo("approved").once().then((DataSnapshot dataSnapshot){
+    await databaseReference.child("item").orderByChild("status").equalTo("approved").once().then((DataSnapshot dataSnapshot){
       if(dataSnapshot.value!=null  ){
         var KEYS= dataSnapshot.value.keys;
         var DATA=dataSnapshot.value;
@@ -346,7 +346,7 @@ class _MyAddsState extends State<MyAdds> {
   Future<List<Property>> getPropertyListPending() async {
     List<Property> list=[];
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("property").orderByChild("status").equalTo("pending").once().then((DataSnapshot dataSnapshot){
+    await databaseReference.child("item").orderByChild("status").equalTo("pending").once().then((DataSnapshot dataSnapshot){
       if(dataSnapshot.value!=null  ){
         var KEYS= dataSnapshot.value.keys;
         var DATA=dataSnapshot.value;
@@ -406,7 +406,7 @@ class _MyAddsState extends State<MyAdds> {
   Future<List<Property>> getPropertyListRejected() async {
     List<Property> list=[];
     final databaseReference = FirebaseDatabase.instance.reference();
-    await databaseReference.child("property").orderByChild("status").equalTo("rejected").once().then((DataSnapshot dataSnapshot){
+    await databaseReference.child("item").orderByChild("status").equalTo("rejected").once().then((DataSnapshot dataSnapshot){
       if(dataSnapshot.value!=null  ){
         var KEYS= dataSnapshot.value.keys;
         var DATA=dataSnapshot.value;

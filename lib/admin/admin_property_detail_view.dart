@@ -191,7 +191,7 @@ class _AdminPropertyDetailState extends State<AdminPropertyDetail> {
                   child: InkWell(
                     onTap: ()async{
                       final databaseReference = FirebaseDatabase.instance.reference();
-                      await databaseReference.child("property").child(widget._property.id).remove().then((value) {
+                      await databaseReference.child("item").child(widget._property.id).remove().then((value) {
                         Navigator.pushReplacement(
                             context, MaterialPageRoute(builder: (BuildContext context) => AdminSearchList()));
                       });
